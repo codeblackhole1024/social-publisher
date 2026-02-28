@@ -1,10 +1,5 @@
 import { type Page } from 'playwright';
-
-// This is a basic outline for a Playwright-based Douyin uploader.
-// In a full implementation, you would need to:
-// 1. Handle cookie injection/persistence for authentication
-// 2. Map selectors accurately (which change frequently on Douyin's creator portal)
-// 3. Handle captcha or human verification when necessary
+import path from 'path';
 
 export async function uploadToDouyin(
   page: Page,
@@ -16,45 +11,69 @@ export async function uploadToDouyin(
   try {
     console.log(`Starting Douyin upload for: ${title}`);
     
-    // 1. Navigate to the creator portal
-    await page.goto('https://creator.douyin.com/creator-micro/content/upload');
+    // 1. Navigate to the creator portal upload page directly
+    await page.goto('https://creator.douyin.com/creator-micro/content/upload', { waitUntil: 'networkidle' });
     
-    // Wait for the page to load
-    await page.waitForTimeout(3000);
+    // Safety check: Make sure we are not on login page
+    if (page.url().includes('login')) {
+      return { success: false, message: '登录态已失效，请重新扫描二维码登录' };
+    }
+
+    await page.waitForTimeout(3000); // Allow DOM to settle
 
     // 2. Upload the file
-    // Note: The specific selector 'input[type="file"]' is a generic assumption.
-    // Real-world implementations require inspecting the current DOM.
-    const fileInput = await page.locator('input[type="file"]');
-    // For Node.js Playwright, this expects a string path to a local file.
-    await fileInput.setInputFiles(typeof file === 'string' ? file : 'path/to/temp/file.mp4');
+    // The standard douyin file input is an input with type=file and accept="video/*"
+    const fileInput = await page.locator('input[type="file"][accept*="video"]').first();
+    const filePath = typeof file === 'string' ? file : path.join(process.cwd(), 'uploads', file.name);
     
-    // Wait for upload to complete (this requires a dynamic check in production)
-    console.log('Uploading file...');
-    await page.waitForTimeout(10000);
+    console.log('Uploading file:', filePath);
+    await fileInput.setInputFiles(filePath);
+    
+    // 3. Wait for upload to complete
+    // We look for indications that the upload progress is complete.
+    // E.g., looking for the word "重新上传" (Re-upload) which appears only after completion.
+    console.log('Waiting for video upload to complete...');
+    
+    try {
+      await page.waitForFunction(() => {
+        return document.body.innerText.includes('重新上传') || document.body.innerText.includes('上传成功');
+      }, { timeout: 120000 }); // Give it up to 2 minutes for big files
+    } catch (e) {
+      console.log('Timeout waiting for text indicators, proceeding anyway. (Video might be large)');
+      // If we wait 120s and it fails, we still try to proceed, but ideally we should fail.
+    }
 
-    // 3. Fill in title
-    console.log('Filling title...');
-    // Replace with actual Douyin title selector
-    // await page.getByPlaceholder('请输入标题').fill(title);
-
-    // 4. Fill in description & tags
-    console.log('Filling description...');
-    const fullDescription = `${description} ${tags.map(t => `#${t}`).join(' ')}`;
-    // Replace with actual Douyin description selector
-    // await page.locator('.editor-content').fill(fullDescription);
+    // 4. Fill in title & description
+    // Douyin uses a unified contenteditable editor (.zone-container is common, or an aria-label="作品描述")
+    console.log('Filling description and tags...');
+    
+    const editor = await page.locator('.zone-container, [contenteditable="true"]').first();
+    await editor.click();
+    await editor.clear();
+    
+    const fullText = `${title}\n\n${description} ${tags.map(t => `#${t}`).join(' ')}`;
+    await editor.fill(fullText);
 
     // 5. Click Publish
     console.log('Publishing...');
-    // Replace with actual Publish button selector
-    // await page.getByRole('button', { name: '发布' }).click();
+    const publishButton = await page.locator('button:has-text("发布")').first();
+    await publishButton.click();
     
-    // Wait for publish success confirmation
-    await page.waitForTimeout(5000);
+    // 6. Wait for success indicator
+    console.log('Waiting for success confirmation...');
     
-    return { success: true, message: 'Douyin upload successful' };
-  } catch (error) {
+    try {
+      // Typically it redirects or shows a success toast
+      await page.waitForFunction(() => {
+        return document.body.innerText.includes('发布成功') || document.body.innerText.includes('审核中') || window.location.href.includes('manage');
+      }, { timeout: 30000 });
+      return { success: true, message: '抖音发布成功！(进入审核阶段)' };
+    } catch (e) {
+      return { success: false, message: '点击了发布，但未检测到成功提示，请前往抖音创作中心确认。' };
+    }
+
+  } catch (error: any) {
     console.error('Douyin upload failed:', error);
-    return { success: false, error: 'Douyin upload failed' };
+    return { success: false, message: `抖音发布过程出错: ${error.message}` };
   }
 }

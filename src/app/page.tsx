@@ -23,6 +23,8 @@ export default function Home() {
     youtube: false,
   })
 
+  const [publishResults, setPublishResults] = useState<{platform: string, success: boolean, message: string}[] | null>(null)
+
   useEffect(() => {
     fetchLoginStatus()
   }, [])
@@ -58,7 +60,6 @@ export default function Home() {
   }
 
   const handlePlatformChange = (platform: keyof typeof platforms) => {
-    // Only allow selection if logged in
     if (!loginStatus[platform]) {
       alert(`请先登录 ${platform} 账号`)
       return
@@ -66,10 +67,12 @@ export default function Home() {
     setPlatforms(prev => ({ ...prev, [platform]: !prev[platform] }))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsSubmitting(true)
+    setPublishResults(null)
     
+    const form = e.currentTarget
     const selectedPlatforms = Object.entries(platforms).filter(([_, isSelected]) => isSelected).map(([key]) => key)
     
     if (selectedPlatforms.length === 0) {
@@ -78,11 +81,39 @@ export default function Home() {
       return
     }
 
-    console.log("Submitting to:", selectedPlatforms)
-    setTimeout(() => {
+    const fileInput = form.elements.namedItem('file') as HTMLInputElement
+    const file = fileInput.files?.[0]
+    if (!file) {
+      alert("请先选择要上传的媒体文件")
       setIsSubmitting(false)
-      alert("提交发布任务成功！")
-    }, 1500)
+      return
+    }
+
+    const formData = new FormData()
+    formData.append('title', (form.elements.namedItem('title') as HTMLInputElement).value)
+    formData.append('description', (form.elements.namedItem('description') as HTMLTextAreaElement).value)
+    formData.append('tags', (form.elements.namedItem('tags') as HTMLInputElement).value)
+    formData.append('file', file)
+    formData.append('platforms', JSON.stringify(platforms))
+
+    try {
+      const response = await fetch('/api/publish', {
+        method: 'POST',
+        body: formData,
+      })
+
+      const data = await response.json()
+      if (data.results) {
+        setPublishResults(data.results)
+      } else {
+        alert(data.error || '发布失败')
+      }
+    } catch (error) {
+      console.error('Publishing failed', error)
+      alert('发布请求发送失败，请检查网络。')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -143,21 +174,21 @@ export default function Home() {
                 <label htmlFor="title" className="text-sm font-medium leading-none">
                   视频/图文标题 <span className="text-red-500">*</span>
                 </label>
-                <Input id="title" required placeholder="请输入引人注目的标题..." />
+                <Input name="title" id="title" required placeholder="请输入引人注目的标题..." />
               </div>
 
               <div className="space-y-2">
                 <label htmlFor="description" className="text-sm font-medium leading-none">
                   内容描述 <span className="text-red-500">*</span>
                 </label>
-                <Textarea id="description" required placeholder="请填写详细的内容描述，支持添加相关的话题标签等信息..." className="min-h-[120px]" />
+                <Textarea name="description" id="description" required placeholder="请填写详细的内容描述，支持添加相关的话题标签等信息..." className="min-h-[120px]" />
               </div>
 
               <div className="space-y-2">
                 <label htmlFor="tags" className="text-sm font-medium leading-none">
                   标签 (Tags)
                 </label>
-                <Input id="tags" placeholder="例如: 科技, 数码, 评测 (用逗号分隔)" />
+                <Input name="tags" id="tags" placeholder="例如: 科技, 数码, 评测 (用逗号分隔)" />
               </div>
 
               <div className="space-y-2">
@@ -170,7 +201,7 @@ export default function Home() {
                       <p className="mb-2 text-sm text-gray-500"><span className="font-semibold">点击上传</span> 或拖拽文件到这里</p>
                       <p className="text-xs text-gray-500">MP4, MOV, PNG, JPG (最大 2GB)</p>
                     </div>
-                    <input id="dropzone-file" type="file" className="hidden" accept="video/mp4,video/quicktime,image/jpeg,image/png" />
+                    <input name="file" id="dropzone-file" type="file" className="hidden" accept="video/mp4,video/quicktime,image/jpeg,image/png" required />
                   </label>
                 </div>
               </div>
@@ -197,13 +228,33 @@ export default function Home() {
                     <label htmlFor="youtube" className={`text-sm font-medium leading-none ${!loginStatus.youtube ? 'text-gray-400 cursor-not-allowed' : 'cursor-pointer'}`}>YouTube</label>
                   </div>
                 </div>
-                <p className="text-xs text-gray-500 mt-2">提示：必须先在账号管理中登录，才能选择对应的平台。</p>
               </div>
             </form>
+
+            {publishResults && (
+              <div className="mt-8 pt-6 border-t">
+                <h3 className="text-lg font-bold mb-4">发布结果</h3>
+                <div className="space-y-3">
+                  {publishResults.map((result, idx) => (
+                    <div key={idx} className={`p-4 rounded-md border ${result.success ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                      <div className="flex items-center">
+                        <div className={`font-bold mr-2 ${result.success ? 'text-green-700' : 'text-red-700'}`}>
+                          {result.platform === 'douyin' && '抖音'}
+                          {result.platform === 'bilibili' && 'B站'}
+                          {result.platform === 'xiaohongshu' && '小红书'}
+                          {result.platform === 'youtube' && 'YouTube'}:
+                        </div>
+                        <span className="text-gray-700">{result.message}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </CardContent>
           <CardFooter className="bg-gray-50 flex justify-end p-6 border-t rounded-b-lg">
             <Button type="submit" form="publish-form" className="w-full sm:w-auto text-lg px-8 py-6" disabled={isSubmitting}>
-              {isSubmitting ? "处理中..." : "一键发布"}
+              {isSubmitting ? "正在自动化发布中 (这可能需要几分钟)..." : "一键发布"}
             </Button>
           </CardFooter>
         </Card>

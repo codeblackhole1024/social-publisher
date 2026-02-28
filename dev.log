@@ -57,3 +57,17 @@
 ✓ Compiled in 27ms
  GET /api/auth/status 200 in 693ms (compile: 671ms, render: 22ms)
  GET /api/auth/status 200 in 705ms (compile: 699ms, render: 6ms)
+ GET / 200 in 112ms (compile: 53ms, render: 59ms)
+ GET /api/auth/status 200 in 9ms (compile: 3ms, render: 6ms)
+Starting login for douyin...
+Please login manually in the opened browser window.
+Waiting for user to log into douyin (timeout: 3 minutes)...
+Successfully saved session for douyin to /Users/codeblackhole/opencode-ws/social-publisher/src/lib/publishers/cookies/douyin.json
+✓ Compiled in 16ms
+ POST /api/auth/douyin 200 in 27.9s (compile: 661ms, render: 27.2s)
+ GET /api/auth/status 200 in 8ms (compile: 4ms, render: 5ms)
+ GET / 200 in 42ms (compile: 7ms, render: 35ms)
+ GET /api/auth/status 200 in 9ms (compile: 2ms, render: 6ms)
+ GET /api/auth/status 200 in 4ms (compile: 1330µs, render: 3ms)
+ GET /api/auth/status 200 in 9ms (compile: 3ms, render: 6ms)
+✓ Compiled in 22ms
