@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
+import { FileIcon, ImageIcon, VideoIcon, XIcon } from "lucide-react"
 
 export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -24,6 +25,7 @@ export default function Home() {
   })
 
   const [publishResults, setPublishResults] = useState<{platform: string, success: boolean, message: string}[] | null>(null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
   useEffect(() => {
     fetchLoginStatus()
@@ -67,6 +69,18 @@ export default function Home() {
     setPlatforms(prev => ({ ...prev, [platform]: !prev[platform] }))
   }
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setSelectedFile(e.target.files[0])
+    }
+  }
+
+  const clearFile = () => {
+    setSelectedFile(null)
+    const fileInput = document.getElementById('dropzone-file') as HTMLInputElement
+    if (fileInput) fileInput.value = ''
+  }
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsSubmitting(true)
@@ -81,9 +95,7 @@ export default function Home() {
       return
     }
 
-    const fileInput = form.elements.namedItem('file') as HTMLInputElement
-    const file = fileInput.files?.[0]
-    if (!file) {
+    if (!selectedFile) {
       alert("请先选择要上传的媒体文件")
       setIsSubmitting(false)
       return
@@ -93,7 +105,7 @@ export default function Home() {
     formData.append('title', (form.elements.namedItem('title') as HTMLInputElement).value)
     formData.append('description', (form.elements.namedItem('description') as HTMLTextAreaElement).value)
     formData.append('tags', (form.elements.namedItem('tags') as HTMLInputElement).value)
-    formData.append('file', file)
+    formData.append('file', selectedFile)
     formData.append('platforms', JSON.stringify(platforms))
 
     try {
@@ -114,6 +126,21 @@ export default function Home() {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const getFileIcon = () => {
+    if (!selectedFile) return null
+    if (selectedFile.type.startsWith('image/')) return <ImageIcon className="w-8 h-8 text-blue-500" />
+    if (selectedFile.type.startsWith('video/')) return <VideoIcon className="w-8 h-8 text-blue-500" />
+    return <FileIcon className="w-8 h-8 text-blue-500" />
+  }
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
   }
 
   return (
@@ -196,13 +223,38 @@ export default function Home() {
                   上传媒体文件 (视频/图片) <span className="text-red-500">*</span>
                 </label>
                 <div className="flex items-center justify-center w-full">
-                  <label htmlFor="dropzone-file" className="flex flex-col items-center justify-center w-full h-40 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <p className="mb-2 text-sm text-gray-500"><span className="font-semibold">点击上传</span> 或拖拽文件到这里</p>
-                      <p className="text-xs text-gray-500">MP4, MOV, PNG, JPG (最大 2GB)</p>
+                  {!selectedFile ? (
+                    <label htmlFor="dropzone-file" className="flex flex-col items-center justify-center w-full h-40 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <svg className="w-8 h-8 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                          <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                        </svg>
+                        <p className="mb-2 text-sm text-gray-500"><span className="font-semibold text-blue-600">点击上传</span> 或拖拽文件到这里</p>
+                        <p className="text-xs text-gray-500">MP4, MOV, PNG, JPG (最大 2GB)</p>
+                      </div>
+                      <input name="file" id="dropzone-file" type="file" className="hidden" accept="video/mp4,video/quicktime,image/jpeg,image/png" required onChange={handleFileChange} />
+                    </label>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center w-full h-40 border-2 border-blue-300 border-solid rounded-lg bg-blue-50 relative">
+                      <button 
+                        type="button" 
+                        onClick={clearFile}
+                        className="absolute top-2 right-2 p-1 bg-white rounded-full text-gray-500 hover:text-red-500 shadow-sm"
+                        title="移除文件"
+                      >
+                        <XIcon className="w-5 h-5" />
+                      </button>
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        {getFileIcon()}
+                        <p className="mt-3 text-sm font-medium text-gray-900 truncate max-w-[250px]">{selectedFile.name}</p>
+                        <p className="text-xs text-gray-500 mt-1">{formatFileSize(selectedFile.size)}</p>
+                        <label htmlFor="dropzone-file" className="mt-4 text-xs font-semibold text-blue-600 cursor-pointer hover:underline">
+                          更换文件
+                        </label>
+                        <input name="file" id="dropzone-file" type="file" className="hidden" accept="video/mp4,video/quicktime,image/jpeg,image/png" onChange={handleFileChange} />
+                      </div>
                     </div>
-                    <input name="file" id="dropzone-file" type="file" className="hidden" accept="video/mp4,video/quicktime,image/jpeg,image/png" required />
-                  </label>
+                  )}
                 </div>
               </div>
 
@@ -228,6 +280,7 @@ export default function Home() {
                     <label htmlFor="youtube" className={`text-sm font-medium leading-none ${!loginStatus.youtube ? 'text-gray-400 cursor-not-allowed' : 'cursor-pointer'}`}>YouTube</label>
                   </div>
                 </div>
+                <p className="text-xs text-gray-500 mt-2">提示：必须先在账号管理中登录，才能选择对应的平台。</p>
               </div>
             </form>
 
