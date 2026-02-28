@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,6 +8,14 @@ import { Checkbox } from "@/components/ui/checkbox"
 
 export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [loginStatus, setLoginStatus] = useState({
+    douyin: false,
+    bilibili: false,
+    xiaohongshu: false,
+    youtube: true,
+  })
+  const [isLoggingIn, setIsLoggingIn] = useState<string | null>(null)
+  
   const [platforms, setPlatforms] = useState({
     douyin: false,
     bilibili: false,
@@ -15,7 +23,46 @@ export default function Home() {
     youtube: false,
   })
 
+  useEffect(() => {
+    fetchLoginStatus()
+  }, [])
+
+  const fetchLoginStatus = async () => {
+    try {
+      const res = await fetch('/api/auth/status')
+      const data = await res.json()
+      setLoginStatus(data)
+    } catch (e) {
+      console.error('Failed to fetch login status')
+    }
+  }
+
+  const handleLogin = async (platform: string) => {
+    if (platform === 'youtube') return
+    
+    setIsLoggingIn(platform)
+    try {
+      alert(`浏览器即将打开，请在打开的页面中扫码或输入密码登录 ${platform}。\n登录完成后关闭页面即可保存凭据。`)
+      const res = await fetch(`/api/auth/${platform}`, { method: 'POST' })
+      if (res.ok) {
+        await fetchLoginStatus()
+        alert('登录状态已保存！')
+      } else {
+        alert('登录失败，请重试')
+      }
+    } catch (e) {
+      alert('网络错误，无法启动登录进程')
+    } finally {
+      setIsLoggingIn(null)
+    }
+  }
+
   const handlePlatformChange = (platform: keyof typeof platforms) => {
+    // Only allow selection if logged in
+    if (!loginStatus[platform]) {
+      alert(`请先登录 ${platform} 账号`)
+      return
+    }
     setPlatforms(prev => ({ ...prev, [platform]: !prev[platform] }))
   }
 
@@ -40,7 +87,46 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 font-sans">
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-3xl mx-auto space-y-8">
+        
+        {/* Account Management Section */}
+        <Card className="w-full">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold text-gray-900">账号管理</CardTitle>
+            <CardDescription>在发布前，请先授权您的账号。基于 Playwright 自动化登录。</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {[
+                { id: 'douyin', name: '抖音' },
+                { id: 'bilibili', name: 'B站' },
+                { id: 'xiaohongshu', name: '小红书' },
+                { id: 'youtube', name: 'YouTube' }
+              ].map(p => (
+                <div key={p.id} className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white shadow-sm space-y-3">
+                  <span className="font-semibold">{p.name}</span>
+                  <div className="flex flex-col items-center space-y-2 w-full">
+                    {loginStatus[p.id as keyof typeof loginStatus] ? (
+                      <span className="text-green-600 text-sm font-medium px-2 py-1 bg-green-50 rounded-full border border-green-200">已连接</span>
+                    ) : (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full text-xs"
+                        onClick={() => handleLogin(p.id)}
+                        disabled={isLoggingIn !== null}
+                      >
+                        {isLoggingIn === p.id ? '登录中...' : '点击登录'}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Publishing Form */}
         <Card className="w-full">
           <CardHeader>
             <CardTitle className="text-3xl font-bold text-center text-gray-900">
@@ -94,23 +180,24 @@ export default function Home() {
                   选择分发平台 <span className="text-red-500">*</span>
                 </label>
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                  <div className="flex items-center space-x-2 bg-white p-3 rounded-md border shadow-sm">
-                    <Checkbox id="douyin" checked={platforms.douyin} onCheckedChange={() => handlePlatformChange('douyin')} />
-                    <label htmlFor="douyin" className="text-sm font-medium leading-none cursor-pointer">抖音</label>
+                  <div className="flex items-center space-x-2 bg-white p-3 rounded-md border shadow-sm opacity-100">
+                    <Checkbox id="douyin" disabled={!loginStatus.douyin} checked={platforms.douyin} onCheckedChange={() => handlePlatformChange('douyin')} />
+                    <label htmlFor="douyin" className={`text-sm font-medium leading-none ${!loginStatus.douyin ? 'text-gray-400 cursor-not-allowed' : 'cursor-pointer'}`}>抖音</label>
                   </div>
                   <div className="flex items-center space-x-2 bg-white p-3 rounded-md border shadow-sm">
-                    <Checkbox id="bilibili" checked={platforms.bilibili} onCheckedChange={() => handlePlatformChange('bilibili')} />
-                    <label htmlFor="bilibili" className="text-sm font-medium leading-none cursor-pointer">B站 (Bilibili)</label>
+                    <Checkbox id="bilibili" disabled={!loginStatus.bilibili} checked={platforms.bilibili} onCheckedChange={() => handlePlatformChange('bilibili')} />
+                    <label htmlFor="bilibili" className={`text-sm font-medium leading-none ${!loginStatus.bilibili ? 'text-gray-400 cursor-not-allowed' : 'cursor-pointer'}`}>B站 (Bilibili)</label>
                   </div>
                   <div className="flex items-center space-x-2 bg-white p-3 rounded-md border shadow-sm">
-                    <Checkbox id="xiaohongshu" checked={platforms.xiaohongshu} onCheckedChange={() => handlePlatformChange('xiaohongshu')} />
-                    <label htmlFor="xiaohongshu" className="text-sm font-medium leading-none cursor-pointer">小红书</label>
+                    <Checkbox id="xiaohongshu" disabled={!loginStatus.xiaohongshu} checked={platforms.xiaohongshu} onCheckedChange={() => handlePlatformChange('xiaohongshu')} />
+                    <label htmlFor="xiaohongshu" className={`text-sm font-medium leading-none ${!loginStatus.xiaohongshu ? 'text-gray-400 cursor-not-allowed' : 'cursor-pointer'}`}>小红书</label>
                   </div>
                   <div className="flex items-center space-x-2 bg-white p-3 rounded-md border shadow-sm">
-                    <Checkbox id="youtube" checked={platforms.youtube} onCheckedChange={() => handlePlatformChange('youtube')} />
-                    <label htmlFor="youtube" className="text-sm font-medium leading-none cursor-pointer">YouTube</label>
+                    <Checkbox id="youtube" disabled={!loginStatus.youtube} checked={platforms.youtube} onCheckedChange={() => handlePlatformChange('youtube')} />
+                    <label htmlFor="youtube" className={`text-sm font-medium leading-none ${!loginStatus.youtube ? 'text-gray-400 cursor-not-allowed' : 'cursor-pointer'}`}>YouTube</label>
                   </div>
                 </div>
+                <p className="text-xs text-gray-500 mt-2">提示：必须先在账号管理中登录，才能选择对应的平台。</p>
               </div>
             </form>
           </CardContent>
