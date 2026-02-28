@@ -218,3 +218,7 @@ Successfully saved session for bilibili to /Users/codeblackhole/opencode-ws/soci
 ✓ Compiled in 32ms
  GET /api/tasks 200 in 51ms (compile: 49ms, render: 1685µs)
  GET /api/tasks 200 in 53ms (compile: 53ms, render: 849µs)
+  Reload env: .env.local
+ GET / 200 in 190ms (compile: 169ms, render: 21ms)
+ GET / 200 in 192ms (compile: 182ms, render: 10ms)
+✓ Compiled in 12ms

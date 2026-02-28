@@ -1,5 +1,4 @@
-import fs from 'fs';
-import path from 'path';
+import { supabase } from './supabase';
 
 export interface PublishResult {
   platform: string;
@@ -20,49 +19,71 @@ export interface PublishTask {
   results: PublishResult[];
 }
 
-const DB_FILE = path.join(process.cwd(), 'data', 'tasks.json');
-
-// Ensure DB file exists
-if (!fs.existsSync(path.dirname(DB_FILE))) {
-  fs.mkdirSync(path.dirname(DB_FILE), { recursive: true });
-}
-if (!fs.existsSync(DB_FILE)) {
-  fs.writeFileSync(DB_FILE, JSON.stringify([]));
-}
-
-export function getTasks(): PublishTask[] {
+export async function getTasks(): Promise<PublishTask[]> {
   try {
-    const data = fs.readFileSync(DB_FILE, 'utf8');
-    const tasks = JSON.parse(data);
-    return tasks.sort((a: PublishTask, b: PublishTask) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const { data, error } = await supabase
+      .from('tasks')
+      .select('*')
+      .order('createdAt', { ascending: false });
+
+    if (error) {
+      console.error('Supabase error fetching tasks:', error);
+      // Auto-fallback: If table doesn't exist, we just return empty array instead of crashing
+      if (error.code === '42P01') {
+        console.warn('Table "tasks" does not exist yet. Please create it in Supabase dashboard.');
+      }
+      return [];
+    }
+
+    return (data || []) as PublishTask[];
   } catch (err) {
-    console.error('Error reading tasks from DB:', err);
+    console.error('Error reading tasks from Supabase:', err);
     return [];
   }
 }
 
-export function saveTask(task: PublishTask) {
+export async function saveTask(task: PublishTask) {
   try {
-    const tasks = getTasks();
-    const existingIndex = tasks.findIndex(t => t.id === task.id);
-    if (existingIndex !== -1) {
-      tasks[existingIndex] = task;
-    } else {
-      tasks.push(task);
+    const { error } = await supabase
+      .from('tasks')
+      .upsert({
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        tags: task.tags,
+        platforms: task.platforms,
+        status: task.status,
+        createdAt: task.createdAt,
+        results: task.results
+      });
+
+    if (error) {
+      console.error('Supabase error saving task:', error);
+      if (error.code === '42P01') {
+        console.warn('Table "tasks" does not exist yet. Please create it with columns: id(text, PK), title(text), description(text), tags(text), platforms(jsonb), status(text), createdAt(text), results(jsonb).');
+      }
     }
-    fs.writeFileSync(DB_FILE, JSON.stringify(tasks, null, 2));
   } catch (err) {
-    console.error('Error writing task to DB:', err);
+    console.error('Error writing task to Supabase:', err);
   }
 }
 
-export function updateTask(id: string, updates: Partial<PublishTask>) {
-  const tasks = getTasks();
-  const index = tasks.findIndex(t => t.id === id);
-  if (index !== -1) {
-    tasks[index] = { ...tasks[index], ...updates };
-    fs.writeFileSync(DB_FILE, JSON.stringify(tasks, null, 2));
-    return tasks[index];
+export async function updateTask(id: string, updates: Partial<PublishTask>) {
+  try {
+    const { data, error } = await supabase
+      .from('tasks')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Supabase error updating task:', error);
+      return null;
+    }
+    return data as PublishTask;
+  } catch (err) {
+    console.error('Error updating task in Supabase:', err);
+    return null;
   }
-  return null;
 }

@@ -46,7 +46,9 @@ export async function POST(req: Request) {
       createdAt: new Date().toISOString(),
       results: []
     };
-    saveTask(taskRecord);
+    
+    // Await the save because Supabase is async now
+    await saveTask(taskRecord);
 
     const buffer = Buffer.from(await file.arrayBuffer());
     filePath = path.join(UPLOADS_DIR, `${Date.now()}-${file.name}`);
@@ -116,7 +118,9 @@ export async function POST(req: Request) {
     const anyFailures = results.some(r => !r.success);
     taskRecord.status = anyFailures && results.some(r => r.success) ? 'completed' : (anyFailures ? 'failed' : 'completed');
     taskRecord.results = results;
-    saveTask(taskRecord);
+    
+    // Await the update
+    await saveTask(taskRecord);
 
     return NextResponse.json({ success: true, results, task: taskRecord });
 
