@@ -7,6 +7,29 @@ if (!fs.existsSync(DEBUG_DIR)) {
   fs.mkdirSync(DEBUG_DIR, { recursive: true });
 }
 
+// Helper to take screenshots safely without crashing the main flow
+async function safeScreenshot(page: Page, filename: string, screenshots: string[], log: (msg: string) => void) {
+  try {
+    await page.screenshot({ 
+      path: path.join(DEBUG_DIR, filename),
+      timeout: 5000, 
+      animations: 'disabled', 
+    });
+    screenshots.push(`/debug/${filename}`);
+  } catch (err) {
+    log(`Debug screenshot failed for ${filename}`);
+  }
+}
+
+// Helper to check for security/SMS verification popups
+async function checkForVerification(page: Page): Promise<boolean> {
+  const text = await page.evaluate(() => document.body.innerText);
+  return text.includes('获取短信验证码') || 
+         text.includes('安全验证') || 
+         text.includes('向您的手机号') || 
+         text.includes('验证码已发送');
+}
+
 export async function uploadToDouyin(
   page: Page,
   file: File | string, 
@@ -20,19 +43,6 @@ export async function uploadToDouyin(
   const log = (msg: string) => {
     console.log(`[Douyin] ${msg}`);
     logs.push(`[${new Date().toLocaleTimeString()}] ${msg}`);
-  };
-
-  const safeScreenshot = async (filename: string) => {
-    try {
-      await page.screenshot({ 
-        path: path.join(DEBUG_DIR, filename),
-        timeout: 5000, 
-        animations: 'disabled', 
-      });
-      screenshots.push(`/debug/${filename}`);
-    } catch (err) {
-      log(`Debug screenshot failed for ${filename}`);
-    }
   };
 
   try {
@@ -61,14 +71,23 @@ export async function uploadToDouyin(
     });
     
     await page.waitForSelector('body', { timeout: 30000 });
-    await safeScreenshot(`douyin_${timestamp}_1_initial.png`);
+    await safeScreenshot(page, `douyin_${timestamp}_1_initial.png`, screenshots, log);
     
     if (page.url().includes('login') || (await page.locator('.login-container').count()) > 0) {
-      return { success: false, message: '登录态已失效，页面停留在登录界面。请重新扫描二维码登录。', logs, screenshots };
+      return { success: false, message: '登录态已失效，页面停留在登录界面。请前往“账号管理”重新扫码登录。', logs, screenshots };
+    }
+
+    if (await checkForVerification(page)) {
+      return { 
+        success: false, 
+        message: '触发了抖音的安全验证机制（需要手机验证码）。自动化服务无法完成此操作。请前往“账号管理”重新点击登录，在弹出的可见浏览器中手动完成验证码输入以刷新信任状态。', 
+        logs, 
+        screenshots 
+      };
     }
 
     await page.waitForTimeout(4000); 
-    await safeScreenshot(`douyin_${timestamp}_2_upload_ready.png`);
+    await safeScreenshot(page, `douyin_${timestamp}_2_upload_ready.png`, screenshots, log);
 
     // 3. Upload the file
     log('Searching for file input...');
@@ -79,7 +98,7 @@ export async function uploadToDouyin(
     
     log(`Uploading file from ${filePath}...`);
     await fileInput.setInputFiles(filePath);
-    await safeScreenshot(`douyin_${timestamp}_3_file_selected.png`);
+    await safeScreenshot(page, `douyin_${timestamp}_3_file_selected.png`, screenshots, log);
     
     // 4. Wait for upload to complete
     log('Waiting for video upload to complete (this might take a few minutes)...');
@@ -94,8 +113,17 @@ export async function uploadToDouyin(
       log('Timeout waiting for text indicators. Proceeding to check description form.');
     }
     
-    await safeScreenshot(`douyin_${timestamp}_4_upload_complete.png`);
+    await safeScreenshot(page, `douyin_${timestamp}_4_upload_complete.png`, screenshots, log);
     await page.waitForTimeout(3000); 
+
+    if (await checkForVerification(page)) {
+      return { 
+        success: false, 
+        message: '上传完成后触发了安全验证（需要验证码）。请前往“账号管理”重新登录并在真实浏览器环境中完成操作以刷新信任状态。', 
+        logs, 
+        screenshots 
+      };
+    }
 
     // 5. Fill in title & description
     log('Filling description and tags...');
@@ -111,7 +139,7 @@ export async function uploadToDouyin(
     await page.keyboard.press('Backspace').catch(() => {});
     await page.keyboard.insertText(fullText);
     
-    await safeScreenshot(`douyin_${timestamp}_5_text_filled.png`);
+    await safeScreenshot(page, `douyin_${timestamp}_5_text_filled.png`, screenshots, log);
     await page.waitForTimeout(1000);
 
     // 6. Click Publish
@@ -129,7 +157,7 @@ export async function uploadToDouyin(
     await publishButton.scrollIntoViewIfNeeded().catch(() => {});
     await page.waitForTimeout(1000); 
     
-    await safeScreenshot(`douyin_${timestamp}_6_before_publish_click.png`);
+    await safeScreenshot(page, `douyin_${timestamp}_6_before_publish_click.png`, screenshots, log);
     
     await publishButton.click({ force: true });
     
@@ -145,12 +173,22 @@ export async function uploadToDouyin(
         page.waitForURL('**/manage/**', { timeout: 30000 })
       ]);
       
-      await safeScreenshot(`douyin_${timestamp}_7_success.png`);
+      await safeScreenshot(page, `douyin_${timestamp}_7_success.png`, screenshots, log);
       log('Published successfully!');
       return { success: true, message: '抖音发布成功！(已确认页面跳转或成功提示)', logs, screenshots };
     } catch (e) {
-      await safeScreenshot(`douyin_${timestamp}_8_failed_detect.png`);
+      await safeScreenshot(page, `douyin_${timestamp}_8_failed_detect.png`, screenshots, log);
       
+      // Final verification check
+      if (await checkForVerification(page)) {
+        return { 
+          success: false, 
+          message: '点击发布时触发了安全验证（手机验证码）。这是平台风控机制。请前往“账号管理”重新点击登录，并在真实可见的浏览器内完成一次手动操作来解除风控。', 
+          logs, 
+          screenshots 
+        };
+      }
+
       const pageText = await page.evaluate(() => document.body.innerText);
       if (pageText.includes('网络异常') || pageText.includes('稍后重试')) {
          log('Network error or rate limit detected.');

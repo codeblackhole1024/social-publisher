@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { loginToPlatform, checkLoginStatus, type Platform } from '@/lib/publishers/login';
+import { updatePlatformLoginStatus } from '@/lib/db';
 
 export async function POST(
   req: Request,
@@ -15,6 +16,8 @@ export async function POST(
     const result = await loginToPlatform(platform as Platform);
     
     if (result.success) {
+      // Sync login status to Supabase DB upon successful login
+      await updatePlatformLoginStatus(platform, true);
       return NextResponse.json({ success: true, message: result.message });
     } else {
       return NextResponse.json({ error: result.error }, { status: 500 });
@@ -36,5 +39,7 @@ export async function GET(
   }
 
   const isLoggedIn = checkLoginStatus(platform as Platform);
+  // Optional: Background sync, but not strictly required on GET if POST handles it
+  
   return NextResponse.json({ isLoggedIn });
 }

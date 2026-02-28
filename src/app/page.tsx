@@ -5,33 +5,25 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
-import { FileIcon, ImageIcon, VideoIcon, XIcon, CheckCircleIcon, XCircleIcon, ClockIcon } from "lucide-react"
-import { PublishTask, PublishResult } from "@/lib/db"
-import Image from "next/image"
+import { FileIcon, ImageIcon, VideoIcon, XIcon, CheckCircleIcon, XCircleIcon } from "lucide-react"
+import { PublishTask, SocialPlatform } from "@/lib/db"
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<'publish' | 'history'>('publish')
   
   // Publish State
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [loginStatus, setLoginStatus] = useState({
-    douyin: false,
-    bilibili: false,
-    xiaohongshu: false,
-    youtube: false,
-  })
   const [isLoggingIn, setIsLoggingIn] = useState<string | null>(null)
-  const [platforms, setPlatforms] = useState({
-    douyin: false,
-    bilibili: false,
-    xiaohongshu: false,
-    youtube: false,
-  })
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   
+  const [dbPlatforms, setDbPlatforms] = useState<SocialPlatform[]>([])
+  
+  // Map of selected platforms for the publishing form
+  const [platforms, setPlatforms] = useState<Record<string, boolean>>({})
+
   // History State
   const [tasks, setTasks] = useState<PublishTask[]>([])
   const [selectedTask, setSelectedTask] = useState<PublishTask | null>(null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
   useEffect(() => {
     fetchLoginStatus()
@@ -41,10 +33,21 @@ export default function Home() {
   const fetchLoginStatus = async () => {
     try {
       const res = await fetch('/api/auth/status')
-      const data = await res.json()
-      setLoginStatus(data)
+      const data: SocialPlatform[] = await res.json()
+      if (Array.isArray(data)) {
+        setDbPlatforms(data)
+        
+        // Initialize local checkboxes state based on db data
+        setPlatforms(prev => {
+          const newState = { ...prev }
+          data.forEach(p => {
+            if (!(p.id in newState)) newState[p.id] = false;
+          })
+          return newState;
+        })
+      }
     } catch (e) {
-      console.error('Failed to fetch login status')
+      console.error('Failed to fetch platform status')
     }
   }
 
@@ -58,16 +61,14 @@ export default function Home() {
     }
   }
 
-  // ----- Publish Logic -----
-
-  const handleLogin = async (platform: string) => {
-    setIsLoggingIn(platform)
+  const handleLogin = async (platformId: string) => {
+    setIsLoggingIn(platformId)
     try {
-      alert(`浏览器即将打开，请在打开的页面中扫码或输入密码登录 ${platform}。\n登录完成后关闭页面即可保存凭据。`)
-      const res = await fetch(`/api/auth/${platform}`, { method: 'POST' })
+      alert(`浏览器即将打开，请在打开的页面中扫码或输入密码登录。\n登录完成后关闭页面即可保存凭据并自动更新状态到数据库。`)
+      const res = await fetch(`/api/auth/${platformId}`, { method: 'POST' })
       if (res.ok) {
         await fetchLoginStatus()
-        alert('登录状态已保存！')
+        alert('登录状态已同步到数据库！')
       } else {
         alert('登录失败，请重试')
       }
@@ -78,12 +79,13 @@ export default function Home() {
     }
   }
 
-  const handlePlatformChange = (platform: keyof typeof platforms) => {
-    if (!loginStatus[platform]) {
-      alert(`请先登录 ${platform} 账号`)
+  const handlePlatformChange = (platformId: string) => {
+    const plat = dbPlatforms.find(p => p.id === platformId)
+    if (!plat?.isConnected) {
+      alert(`请先登录 ${plat?.name} 账号`)
       return
     }
-    setPlatforms(prev => ({ ...prev, [platform]: !prev[platform] }))
+    setPlatforms(prev => ({ ...prev, [platformId]: !prev[platformId] }))
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -132,7 +134,6 @@ export default function Home() {
 
       const data = await response.json()
       if (data.task) {
-        // Refresh tasks and jump to history view to show details
         await fetchTasks()
         setSelectedTask(data.task)
         setActiveTab('history')
@@ -164,7 +165,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
-      {/* Top Navigation */}
       <div className="bg-white border-b shadow-sm sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-center space-x-8">
@@ -193,48 +193,49 @@ export default function Home() {
       </div>
 
       <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        
         {/* ==================== PUBLISH TAB ==================== */}
         {activeTab === 'publish' && (
           <div className="space-y-8">
-            {/* Account Management Section */}
             <Card className="w-full">
               <CardHeader>
                 <CardTitle className="text-2xl font-bold text-gray-900">账号管理</CardTitle>
-                <CardDescription>在发布前，请先授权您的账号。基于 Playwright 自动化登录。</CardDescription>
+                <CardDescription>在发布前，请先授权您的账号。登录状态由云端数据库管理。</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  {[
-                    { id: 'douyin', name: '抖音' },
-                    { id: 'bilibili', name: 'B站' },
-                    { id: 'xiaohongshu', name: '小红书' },
-                    { id: 'youtube', name: 'YouTube' }
-                  ].map(p => (
-                    <div key={p.id} className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white shadow-sm space-y-3">
-                      <span className="font-semibold">{p.name}</span>
-                      <div className="flex flex-col items-center space-y-2 w-full">
-                        {loginStatus[p.id as keyof typeof loginStatus] ? (
-                          <span className="text-green-600 text-sm font-medium px-2 py-1 bg-green-50 rounded-full border border-green-200">已连接</span>
-                        ) : (
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="w-full text-xs"
-                            onClick={() => handleLogin(p.id)}
-                            disabled={isLoggingIn !== null}
-                          >
-                            {isLoggingIn === p.id ? '登录中...' : '点击登录'}
-                          </Button>
-                        )}
+                  {dbPlatforms.length === 0 ? (
+                    <div className="col-span-4 text-center text-sm text-gray-500 py-4">正在从数据库加载支持的平台列表...</div>
+                  ) : (
+                    dbPlatforms.map(p => (
+                      <div key={p.id} className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white shadow-sm space-y-3">
+                        <span className="font-semibold">{p.name}</span>
+                        <div className="flex flex-col items-center space-y-2 w-full">
+                          {p.isConnected ? (
+                            <div className="flex flex-col items-center text-center">
+                              <span className="text-green-600 text-sm font-medium px-2 py-1 bg-green-50 rounded-full border border-green-200">已连接</span>
+                              {p.lastLoginAt && (
+                                <span className="text-[10px] text-gray-400 mt-1">最后登录: {new Date(p.lastLoginAt).toLocaleDateString()}</span>
+                              )}
+                            </div>
+                          ) : (
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="w-full text-xs"
+                              onClick={() => handleLogin(p.id)}
+                              disabled={isLoggingIn !== null}
+                            >
+                              {isLoggingIn === p.id ? '登录中...' : '点击登录'}
+                            </Button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>
 
-            {/* Publishing Form */}
             <Card className="w-full">
               <CardHeader>
                 <CardTitle className="text-3xl font-bold text-center text-gray-900">
@@ -243,7 +244,6 @@ export default function Home() {
               </CardHeader>
               <CardContent>
                 <form id="publish-form" onSubmit={handleSubmit} className="space-y-6">
-                  
                   <div className="space-y-2">
                     <label htmlFor="title" className="text-sm font-medium leading-none">
                       视频/图文标题 <span className="text-red-500">*</span>
@@ -298,19 +298,16 @@ export default function Home() {
                   <div className="space-y-3 pt-4 border-t">
                     <label className="text-base font-semibold">选择分发平台 <span className="text-red-500">*</span></label>
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                      {Object.keys(platforms).map((key) => {
-                        const pid = key as keyof typeof platforms;
-                        return (
-                          <div key={pid} className="flex items-center space-x-2 bg-white p-3 rounded-md border shadow-sm">
-                            <Checkbox id={pid} disabled={!loginStatus[pid]} checked={platforms[pid]} onCheckedChange={() => handlePlatformChange(pid)} />
-                            <label htmlFor={pid} className={`text-sm font-medium leading-none ${!loginStatus[pid] ? 'text-gray-400 cursor-not-allowed' : 'cursor-pointer'}`}>
-                              {pid === 'douyin' ? '抖音' : pid === 'bilibili' ? 'B站' : pid === 'xiaohongshu' ? '小红书' : 'YouTube'}
-                            </label>
-                          </div>
-                        )
-                      })}
+                      {dbPlatforms.map((plat) => (
+                        <div key={plat.id} className="flex items-center space-x-2 bg-white p-3 rounded-md border shadow-sm">
+                          <Checkbox id={plat.id} disabled={!plat.isConnected} checked={platforms[plat.id] || false} onCheckedChange={() => handlePlatformChange(plat.id)} />
+                          <label htmlFor={plat.id} className={`text-sm font-medium leading-none ${!plat.isConnected ? 'text-gray-400 cursor-not-allowed' : 'cursor-pointer'}`}>
+                            {plat.name}
+                          </label>
+                        </div>
+                      ))}
                     </div>
-                    <p className="text-xs text-gray-500 mt-2">提示：必须先在账号管理中登录，才能选择对应的平台。</p>
+                    <p className="text-xs text-gray-500 mt-2">提示：由数据库动态提供支持平台。必须先在账号管理中登录，才能选择对应的平台。</p>
                   </div>
                 </form>
               </CardContent>
@@ -327,7 +324,6 @@ export default function Home() {
         {activeTab === 'history' && (
           <div className="space-y-6">
             {!selectedTask ? (
-              // Task List View
               <div className="grid gap-4">
                 {tasks.length === 0 ? (
                   <div className="text-center py-12 text-gray-500 bg-white border rounded-lg">暂无发布历史记录</div>
@@ -364,7 +360,6 @@ export default function Home() {
                 )}
               </div>
             ) : (
-              // Task Details View
               <div className="space-y-6">
                 <Button variant="outline" onClick={() => setSelectedTask(null)} className="mb-4">
                   ← 返回列表
@@ -391,7 +386,6 @@ export default function Home() {
                           </p>
 
                           <div className="space-y-4">
-                            {/* Execution Logs */}
                             {res.logs && res.logs.length > 0 && (
                               <div className="bg-gray-900 rounded-md p-4 overflow-x-auto">
                                 <h4 className="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">执行日志</h4>
@@ -403,7 +397,6 @@ export default function Home() {
                               </div>
                             )}
 
-                            {/* Screenshots Carousel/Grid */}
                             {res.screenshots && res.screenshots.length > 0 && (
                               <div>
                                 <h4 className="text-sm font-semibold text-gray-700 mb-3 border-b pb-2">自动化调试截图 (Timeline)</h4>

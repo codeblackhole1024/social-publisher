@@ -19,6 +19,82 @@ export interface PublishTask {
   results: PublishResult[];
 }
 
+export interface SocialPlatform {
+  id: string; // e.g., 'douyin', 'bilibili'
+  name: string; // e.g., '抖音', 'B站'
+  isConnected: boolean;
+  lastLoginAt: string | null; // ISO Date String
+}
+
+// ----------------------------------------------------
+// Platform Operations
+// ----------------------------------------------------
+
+export async function getPlatforms(): Promise<SocialPlatform[]> {
+  try {
+    const { data, error } = await supabase
+      .from('platforms')
+      .select('*');
+
+    if (error) {
+      if (error.code === '42P01') {
+        console.warn('Table "platforms" does not exist yet. Using defaults.');
+        return [
+          { id: 'douyin', name: '抖音', isConnected: false, lastLoginAt: null },
+          { id: 'bilibili', name: 'B站', isConnected: false, lastLoginAt: null },
+          { id: 'xiaohongshu', name: '小红书', isConnected: false, lastLoginAt: null },
+          { id: 'youtube', name: 'YouTube', isConnected: false, lastLoginAt: null },
+        ];
+      }
+      console.error('Supabase error fetching platforms:', error);
+      return [];
+    }
+
+    // If table is empty, initialize defaults
+    if (!data || data.length === 0) {
+      const defaultPlatforms = [
+        { id: 'douyin', name: '抖音', isConnected: false, lastLoginAt: null },
+        { id: 'bilibili', name: 'B站', isConnected: false, lastLoginAt: null },
+        { id: 'xiaohongshu', name: '小红书', isConnected: false, lastLoginAt: null },
+        { id: 'youtube', name: 'YouTube', isConnected: false, lastLoginAt: null },
+      ];
+      await supabase.from('platforms').insert(defaultPlatforms);
+      return defaultPlatforms;
+    }
+
+    return data as SocialPlatform[];
+  } catch (err) {
+    console.error('Error reading platforms from Supabase:', err);
+    return [];
+  }
+}
+
+export async function updatePlatformLoginStatus(platformId: string, isConnected: boolean) {
+  try {
+    const { error } = await supabase
+      .from('platforms')
+      .update({
+        isConnected,
+        lastLoginAt: isConnected ? new Date().toISOString() : null,
+      })
+      .eq('id', platformId);
+
+    if (error) {
+      if (error.code === '42P01') {
+         console.warn('Table "platforms" does not exist yet. Please create it with columns: id(text, PK), name(text), isConnected(boolean), lastLoginAt(text).');
+      } else {
+         console.error('Supabase error updating platform login status:', error);
+      }
+    }
+  } catch (err) {
+    console.error('Error updating platform login to Supabase:', err);
+  }
+}
+
+// ----------------------------------------------------
+// Task Operations
+// ----------------------------------------------------
+
 export async function getTasks(): Promise<PublishTask[]> {
   try {
     const { data, error } = await supabase
@@ -28,7 +104,6 @@ export async function getTasks(): Promise<PublishTask[]> {
 
     if (error) {
       console.error('Supabase error fetching tasks:', error);
-      // Auto-fallback: If table doesn't exist, we just return empty array instead of crashing
       if (error.code === '42P01') {
         console.warn('Table "tasks" does not exist yet. Please create it in Supabase dashboard.');
       }
@@ -59,9 +134,6 @@ export async function saveTask(task: PublishTask) {
 
     if (error) {
       console.error('Supabase error saving task:', error);
-      if (error.code === '42P01') {
-        console.warn('Table "tasks" does not exist yet. Please create it with columns: id(text, PK), title(text), description(text), tags(text), platforms(jsonb), status(text), createdAt(text), results(jsonb).');
-      }
     }
   } catch (err) {
     console.error('Error writing task to Supabase:', err);

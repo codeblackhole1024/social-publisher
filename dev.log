@@ -222,3 +222,35 @@ Successfully saved session for bilibili to /Users/codeblackhole/opencode-ws/soci
  GET / 200 in 190ms (compile: 169ms, render: 21ms)
  GET / 200 in 192ms (compile: 182ms, render: 10ms)
 ✓ Compiled in 12ms
+ GET / 200 in 86ms (compile: 6ms, render: 80ms)
+ GET /api/auth/status 200 in 107ms (compile: 100ms, render: 7ms)
+ GET /api/tasks 200 in 3.2s (compile: 194ms, render: 3.0s)
+[Douyin] Starting Douyin upload for: test
+[Douyin] Navigating to Douyin creator portal...
+[Douyin] Searching for file input...
+[Douyin] Uploading file from /Users/codeblackhole/opencode-ws/social-publisher/uploads/1772291112414-naruto-1_no_watermark.mp4...
+[Douyin] Waiting for video upload to complete (this might take a few minutes)...
+[Douyin] Video upload finished.
+[Douyin] Filling description and tags...
+[Douyin] Publishing...
+[Douyin] Waiting for success confirmation (URL change or Success Toast)...
+[Douyin] Failed to detect success state.
+ POST /api/publish 200 in 48s (compile: 47ms, render: 48s)
+ GET /api/tasks 200 in 441ms (compile: 5ms, render: 436ms)
+✓ Compiled in 18ms
+ GET /api/tasks 200 in 1648ms (compile: 48ms, render: 1600ms)
+Supabase error fetching platforms: {
+  code: 'PGRST205',
+  details: null,
+  hint: null,
+  message: "Could not find the table 'public.platforms' in the schema cache"
+}
+ GET /api/auth/status 200 in 1667ms (compile: 76ms, render: 1591ms)
+ GET /api/tasks 200 in 1844ms (compile: 76ms, render: 1768ms)
+Supabase error fetching platforms: {
+  code: 'PGRST205',
+  details: null,
+  hint: null,
+  message: "Could not find the table 'public.platforms' in the schema cache"
+}
+ GET /api/auth/status 200 in 2.8s (compile: 80ms, render: 2.8s)
