@@ -30,7 +30,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    // Save the physical file locally
     const buffer = Buffer.from(await file.arrayBuffer());
     filePath = path.join(UPLOADS_DIR, `${Date.now()}-${file.name}`);
     fs.writeFileSync(filePath, buffer);
@@ -38,15 +37,24 @@ export async function POST(req: Request) {
     const results = [];
     const tagsArray = tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : [];
 
-    browser = await chromium.launch({ headless: true });
+    // Stealth parameters to avoid Douyin bot checks preventing the publish button from activating
+    browser = await chromium.launch({ 
+        headless: true,
+        args: [
+            '--disable-blink-features=AutomationControlled',
+            '--disable-web-security'
+        ]
+    });
 
-    // Execute platforms
     if (platforms.douyin) {
       try {
         const cookiePath = path.join(COOKIES_DIR, 'douyin.json');
         if (!fs.existsSync(cookiePath)) throw new Error('未找到抖音登录凭证');
         
-        const context = await browser.newContext({ storageState: cookiePath });
+        const context = await browser.newContext({ 
+            storageState: cookiePath,
+            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+        });
         const page = await context.newPage();
         
         const result = await uploadToDouyin(page, filePath, title, description, tagsArray);
