@@ -5,17 +5,17 @@
       "value": "eyJtYXRjaCI6dHJ1ZSwicGVyY2VudCI6MC41NTExNzQzNzAwNjM1NjA4fQ==.JrrUiAzD9CYHzGSQqIlkh1p4JHLzirW9sP74XTEONao=",
       "domain": "creator.douyin.com",
       "path": "/goofy/douyin_creator_pc/creator_pc_vmok_common/vmok-manifest.json",
-      "expires": 1772884165.129645,
+      "expires": 1772896278.497072,
       "httpOnly": true,
       "secure": false,
       "sameSite": "Lax"
     },
     {
       "name": "gd_random",
-      "value": "eyJwZXJjZW50IjowLjU1MTE3NDM3MDA2MzU2MDgsIm1hdGNoIjp0cnVlfQ==.qeytLssWImBfdyC6/OaqbUHqFzRomuFsCSvMtpkgz2o=",
+      "value": "eyJtYXRjaCI6dHJ1ZSwicGVyY2VudCI6MC41NTExNzQzNzAwNjM1NjA4fQ==.JrrUiAzD9CYHzGSQqIlkh1p4JHLzirW9sP74XTEONao=",
       "domain": "creator.douyin.com",
       "path": "/goofy/douyin_creator_pc/vmok/author-tag/vmok-manifest.json",
-      "expires": 1772884166.11731,
+      "expires": 1772896280.046352,
       "httpOnly": true,
       "secure": false,
       "sameSite": "Lax"
@@ -25,17 +25,7 @@
       "value": "eyJtYXRjaCI6ZmFsc2UsInBlcmNlbnQiOjAuNTUxMTc0MzcwMDYzNTYwOH0=.POBwvHrJC7myCe8fMblPE/+3M2WPJYdi/OQcunFDFVA=",
       "domain": "creator.douyin.com",
       "path": "/goofy/douyin_creator_pc",
-      "expires": 1772884165.507129,
-      "httpOnly": true,
-      "secure": false,
-      "sameSite": "Lax"
-    },
-    {
-      "name": "gd_random",
-      "value": "eyJtYXRjaCI6ZmFsc2UsInBlcmNlbnQiOjAuNTUxMTc0MzcwMDYzNTYwOH0=.POBwvHrJC7myCe8fMblPE/+3M2WPJYdi/OQcunFDFVA=",
-      "domain": "creator.douyin.com",
-      "path": "/",
-      "expires": 1772884164.61355,
+      "expires": 1772896278.579733,
       "httpOnly": true,
       "secure": false,
       "sameSite": "Lax"
@@ -95,7 +85,7 @@
       "value": "2",
       "domain": ".douyin.com",
       "path": "/",
-      "expires": 1777463365.270244,
+      "expires": 1777475479.053493,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Lax"
@@ -116,46 +106,6 @@
       "domain": ".douyin.com",
       "path": "/",
       "expires": 1777463345.789639,
-      "httpOnly": false,
-      "secure": false,
-      "sameSite": "Lax"
-    },
-    {
-      "name": "sdk_source_info",
-      "value": "7e276470716a68645a606960273f276364697660272927676c715a6d6069756077273f276364697660272927666d776a68605a607d71606b766c6a6b5a7666776c7571273f275e58272927666a6b766a69605a696c6061273f27636469766027292762696a6764695a7364776c6467696076273f275e592772606761776c73607759275827292771273f273c3c343231363c3237373232342778",
-      "domain": ".douyin.com",
-      "path": "/",
-      "expires": 1772279647.228178,
-      "httpOnly": false,
-      "secure": false,
-      "sameSite": "Lax"
-    },
-    {
-      "name": "bit_env",
-      "value": "M_ZSvqJr1Ni-XGyvKpXhaxAJNO-6fQQmj4MAr0wQ9DuIciIPt7rgRBHUH1l4zFWLeUv_jW6h_yx2JU51Z1UEQhQ_XkTx9H_ocZT3rAs7LhOMstruCG-ODHfINWMmeoF8nEz0cD9a4mXRzYI9j2l5Xd_Kw3xQGnChGTCwDJ_-oJNMvsVrFZ5rsUIGKfyWXQCVnTEdkEm4H7dryL3X_eMb7W_BHxCbTen9uONBklQhDsO6asS_IQMyCmv6VSC6JdD9RI67tHLf2Nx0Bv3D3HivhuCF0XvofILGxRguKRE-nfPbhl66GBSIAke6o0NN4YqlKbAzjgpJm7fRwtADAo7zcsH8dqzMb_AmpcLiPUlsv1oFZwwnPQqdPDeCUY5vRAYB_8vwIStRSHZPaCYa0BHSjCcs6piWbUBMEcEqnrAUt0dAOOiyI9CTSZOY2zujMyJKNvJgiRCgtosdI2dOrEKGLp6ABluGpre7bZ1hDoHIW5yWITeGownZNwhmVxmUCyinSgBxdolsTyLAtEZTpkmKkZuhomgeKSyx-IOMjtkKW0s%3D",
-      "domain": ".douyin.com",
-      "path": "/",
-      "expires": 1772279647.228319,
-      "httpOnly": false,
-      "secure": false,
-      "sameSite": "Lax"
-    },
-    {
-      "name": "gulu_source_res",
-      "value": "eyJwX2luIjoiYWNkYjc2M2Q4ZTJiMDUzNDY5NGUzNjE0OThjYzQxODMwMWFlZGJlNmRhZmYxYzNhZmM0ZTdlNzI4ZWM1MjZkMyJ9",
-      "domain": ".douyin.com",
-      "path": "/",
-      "expires": 1772279647.228371,
-      "httpOnly": false,
-      "secure": false,
-      "sameSite": "Lax"
-    },
-    {
-      "name": "passport_auth_mix_state",
-      "value": "32ayq2tnty5mwaphli38fw5k5xi34666n9my8jue7wjqfjgs",
-      "domain": ".douyin.com",
-      "path": "/",
-      "expires": 1772279587.228424,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Lax"
@@ -311,16 +261,6 @@
       "sameSite": "None"
     },
     {
-      "name": "ttwid",
-      "value": "1%7CDKrZ0dfn5HP5RHGiCVFcnUQJzBMY40BBE8B3YzimwqI%7C1772279365%7C1892cc60cfba7031b8d367e16e5bb3446cf9e901b821fedad89515fc4e175942",
-      "domain": ".douyin.com",
-      "path": "/",
-      "expires": 1803815365.139663,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
       "name": "_bd_ticket_crypt_doamin",
       "value": "2",
       "domain": ".douyin.com",
@@ -381,16 +321,6 @@
       "sameSite": "Lax"
     },
     {
-      "name": "bd_ticket_guard_client_data",
-      "value": "eyJiZC10aWNrZXQtZ3VhcmQtdmVyc2lvbiI6MiwiYmQtdGlja2V0LWd1YXJkLWl0ZXJhdGlvbi12ZXJzaW9uIjoxLCJiZC10aWNrZXQtZ3VhcmQtcmVlLXB1YmxpYy1rZXkiOiJCQUN0b2t2WExXTTFWNlpPaTk3b3lhdE1pUDZtdEJtWHhXVVg1bGRyNWVrSGtsc0hCbFpLUWdXeG50M1VHVmhRTjYxWEFOOWRVZ2Jaajk2eGYvSmRqNXM9IiwiYmQtdGlja2V0LWd1YXJkLXdlYi12ZXJzaW9uIjoyfQ%3D%3D",
-      "domain": ".douyin.com",
-      "path": "/",
-      "expires": 1777463365.27019,
-      "httpOnly": false,
-      "secure": false,
-      "sameSite": "Lax"
-    },
-    {
       "name": "csrf_session_id",
       "value": "2f5af7d4995a2a2163d8ba6237b7e48c",
       "domain": "summon.bytedance.com",
@@ -399,6 +329,36 @@
       "httpOnly": false,
       "secure": true,
       "sameSite": "None"
+    },
+    {
+      "name": "gd_random",
+      "value": "eyJtYXRjaCI6ZmFsc2UsInBlcmNlbnQiOjAuNTUxMTc0MzcwMDYzNTYwOH0=.POBwvHrJC7myCe8fMblPE/+3M2WPJYdi/OQcunFDFVA=",
+      "domain": "creator.douyin.com",
+      "path": "/",
+      "expires": 1772896277.42177,
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "ttwid",
+      "value": "1%7CDKrZ0dfn5HP5RHGiCVFcnUQJzBMY40BBE8B3YzimwqI%7C1772291478%7C00fb3d8f7d2d7a74457f26b2fd2c4dbd97e34f57a259f3dede0967fff213f61e",
+      "domain": ".douyin.com",
+      "path": "/",
+      "expires": 1803827478.886281,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "bd_ticket_guard_client_data",
+      "value": "eyJiZC10aWNrZXQtZ3VhcmQtdmVyc2lvbiI6MiwiYmQtdGlja2V0LWd1YXJkLWl0ZXJhdGlvbi12ZXJzaW9uIjoxLCJiZC10aWNrZXQtZ3VhcmQtcmVlLXB1YmxpYy1rZXkiOiJCQUN0b2t2WExXTTFWNlpPaTk3b3lhdE1pUDZtdEJtWHhXVVg1bGRyNWVrSGtsc0hCbFpLUWdXeG50M1VHVmhRTjYxWEFOOWRVZ2Jaajk2eGYvSmRqNXM9IiwiYmQtdGlja2V0LWd1YXJkLXdlYi12ZXJzaW9uIjoyfQ%3D%3D",
+      "domain": ".douyin.com",
+      "path": "/",
+      "expires": 1777475479.053464,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
     }
   ],
   "origins": [
@@ -407,7 +367,7 @@
       "localStorage": [
         {
           "name": "__tea_cache_tokens_2906",
-          "value": "{\"user_unique_id\":\"111347309343\",\"web_id\":\"7611881766047172131\",\"timestamp\":1772279365731,\"_type_\":\"default\"}"
+          "value": "{\"user_unique_id\":\"111347309343\",\"web_id\":\"7611881766047172131\",\"timestamp\":1772291479784,\"_type_\":\"default\"}"
         },
         {
           "name": "login_type_from_login",
@@ -435,7 +395,11 @@
         },
         {
           "name": "xmst",
-          "value": "g8MiR1YlXVnrKABJPK-fzJ1mTnR2YPAVFNG7swDcR-KxfPYdYnrqLYbivpZPcBZ6UV39UblWgcPIAkvKW3kl5CgIOJHeXL5mQi8lrUEbMgZ-uRRF3rSKifXNNZ7gX3LA5I0vcW3KXqhZZNpWtNT5HRKynUB0BJHBuNYRwcvDjREJHYqAsajCMX2q"
+          "value": "DzCRnznRqle-fGxfkr7Sh2UuqBAHMuRqPA4ta6HwUBRg-CG7MxyqMB7abrEmtJvNYPGKKOisEx-Kmq2U-YPh3qzSGYgQvYLFvVbhYZGHem_R7GQn8cN736Wn89NdN40uQ4-Y21RJ7kOwkrX3rpxld8LDeMpKFQCuVwNRyl69ORXmkbLBNs1sYQsF"
+        },
+        {
+          "name": "__tea_cache_tokens_5231",
+          "value": "{\"web_id\":\"7611933843558368768\",\"user_unique_id\":\"7611933843558368768\",\"timestamp\":1772291480597,\"_type_\":\"default\"}"
         },
         {
           "name": "ztsdk_tcc_config",
@@ -443,27 +407,35 @@
         },
         {
           "name": "__tea_sdk_ab_version_2906",
-          "value": "{\"ab_version\":[\"90613695\",\"90112463\",\"90111556\"],\"ab_ext_version\":[],\"ab_version_multilink\":[],\"data\":{\"ai_gen_cover\":{\"val\":0,\"vid\":\"15080731\"},\"assistantImage\":{\"val\":1,\"vid\":\"90116780\"},\"chapter_recommend_after_publish\":{\"val\":0,\"vid\":\"14187473\"},\"chapter_sync_reach\":{\"val\":1,\"vid\":\"91050166\"},\"chapter_video_status\":{\"val\":2,\"vid\":\"90953361\"},\"co_create_new_role\":{\"val\":true,\"vid\":\"90611581\"},\"collection_enable_set_secret_status\":{\"val\":1,\"vid\":\"90124858\"},\"cover_editor_interaction_opti\":{\"val\":2,\"vid\":\"90599399\"},\"cover_filling_rate_increase_all\":{\"val\":0,\"vid\":\"15074840\"},\"cover_h265_ffmpeg_capture\":{\"val\":true,\"vid\":\"90166065\"},\"crc_config\":{\"val\":{\"cacheOptions\":false,\"crc32InMain\":false,\"crc32PreNum\":0,\"preCreateWorker\":false,\"skip1002\":false},\"vid\":\"15554557\"},\"creator_comment_manage\":{\"val\":1,\"vid\":\"90613695\"},\"creator_danmaku_manage\":{\"val\":{\"menus_show\":1},\"vid\":\"90118007\"},\"creator_data_bullet_analysis\":{\"val\":{\"bullet_analysis_tab_show\":2},\"vid\":\"90128271\"},\"creator_data_new\":{\"val\":true,\"vid\":\"90081040\"},\"creator_data_progress_analysis\":{\"val\":{\"fans_analysis_tab_show\":1},\"vid\":\"90128191\"},\"creator_pc\":{\"val\":{\"tab_ab_show_new_home\":1},\"vid\":\"90109488\"},\"creator_pc_1_3_intell_chapter\":{\"val\":1,\"vid\":\"90122502\"},\"creator_pc_clip\":{\"val\":{\"capcut\":1},\"vid\":\"90119963\"},\"creator_pc_cover_min_size\":{\"val\":2,\"vid\":\"90126311\"},\"creator_pc_data_center\":{\"val\":{\"is_new_live_content\":1},\"vid\":\"90111860\"},\"creator_pc_data_center_new_list\":{\"val\":1,\"vid\":\"90625082\"},\"creator_pc_game_mounted_anchor_reedit\":{\"val\":1,\"vid\":\"90122407\"},\"creator_pc_game_mounted_anchor_revision_v2\":{\"val\":2,\"vid\":\"90125303\"},\"creator_pc_game_mounted_game_activity_profit\":{\"val\":3,\"vid\":\"90127201\"},\"creator_pc_home\":{\"val\":{\"interactive_show_type\":2},\"vid\":\"90111556\"},\"creator_pc_image_music_optimization\":{\"val\":1,\"vid\":\"90962255\"},\"creator_pc_mission\":{\"val\":{\"visible\":1},\"vid\":\"90112463\"},\"creator_pc_modify_item_entrance\":{\"val\":1,\"vid\":\"90128660\"},\"creator_pc_new_cover_text\":{\"val\":true,\"vid\":\"90125008\"},\"creator_pc_org\":{\"val\":{\"new_org\":1},\"vid\":\"90123271\"},\"creator_pc_org_home\":{\"val\":{\"new_home\":1},\"vid\":\"90112354\"},\"creator_pc_recommend_cover_opt\":{\"val\":true,\"vid\":\"90127437\"},\"creator_pc_tab_ab\":{\"val\":{\"account_show\":2},\"vid\":\"90092974\"},\"creator_pc_upload_cancel_btn\":{\"val\":0,\"vid\":\"90173282\"},\"creator_pc_upload_progress_detail\":{\"val\":1,\"vid\":\"90173281\"},\"creator_pc_video_music_optimization\":{\"val\":1,\"vid\":\"90945842\"},\"creator_pc_video_quality_intro\":{\"val\":2,\"vid\":\"91037348\"},\"creator_pc_work_detail_version\":{\"val\":1,\"vid\":\"90356254\"},\"creator_publish_cover_check\":{\"val\":1,\"vid\":\"90122334\"},\"creator_school_nav\":{\"val\":{\"nav_type\":1},\"vid\":\"90081895\"},\"creator_upload_async\":{\"val\":1,\"vid\":\"90324260\"},\"creator_upload_cancel\":{\"val\":1,\"vid\":\"90124601\"},\"creator_uploader_tos_direct\":{\"val\":1,\"vid\":\"90126365\"},\"data_cover_rate\":{\"val\":{\"is_show_cover_rate\":true},\"vid\":\"90121311\"},\"dict\":{\"val\":{\"canShowUserDeclaration\":true},\"vid\":\"90114001\"},\"douyin_cover_imagelayer_editable\":{\"val\":true,\"vid\":\"90111484\"},\"douyin_outer_progress_enbale\":{\"val\":1,\"vid\":\"90118893\"},\"douyin_pc_creator_image_text\":{\"val\":true,\"vid\":\"90093311\"},\"download_frame_limit\":{\"val\":3,\"vid\":\"91217036\"},\"editor_filter\":{\"val\":true,\"vid\":\"90122909\"},\"enableChapterSelfMade\":{\"val\":1,\"vid\":\"90940916\"},\"enhance_cover_check_dual\":{\"val\":1,\"vid\":\"90906860\"},\"is_new_loki\":{\"val\":1,\"vid\":\"90975626\"},\"is_show_pc_content_analysis\":{\"val\":{\"enabled\":1},\"vid\":\"90118423\"},\"is_show_tagged_page\":{\"val\":true,\"vid\":\"90992719\"},\"limit_recommend_cover_local\":{\"val\":true,\"vid\":\"91283345\"},\"maxReadConcurrent\":{\"val\":5,\"vid\":\"13054949\"},\"openReadConcurrent\":{\"val\":true,\"vid\":\"13054949\"},\"publish_layout\":{\"val\":2,\"vid\":\"91020340\"},\"quick_fill\":{\"val\":true,\"vid\":\"90997687\"},\"recommend_chapter_async_link\":{\"val\":1,\"vid\":\"90129292\"},\"refine_cover_tool\":{\"val\":2,\"vid\":\"90120266\"},\"show_activity_tag\":{\"val\":true,\"vid\":\"90102355\"},\"show_info\":{\"val\":1,\"vid\":\"90126292\"},\"show_intellect_chapter_entry\":{\"val\":1,\"vid\":\"90094899\"},\"slardar_filter\":{\"val\":true,\"vid\":\"90122697\"},\"table_tab\":{\"val\":\"contribute\",\"vid\":\"90094565\"},\"test\":{\"val\":true,\"vid\":\"90082519\"},\"title_permission_new\":{\"val\":1,\"vid\":\"90111481\"},\"use_new_player\":{\"val\":true,\"vid\":\"91048272\"},\"vertical_video_double_cover\":{\"val\":1,\"vid\":\"91234029\"}},\"timestamp\":1772279366848,\"uuid\":\"111347309343\"}"
+          "value": "{\"ab_version\":[\"90613695\",\"90112463\",\"90111556\"],\"ab_ext_version\":[],\"ab_version_multilink\":[],\"data\":{\"ai_gen_cover\":{\"val\":0,\"vid\":\"15080731\"},\"assistantImage\":{\"val\":1,\"vid\":\"90116780\"},\"chapter_recommend_after_publish\":{\"val\":0,\"vid\":\"14187473\"},\"chapter_sync_reach\":{\"val\":1,\"vid\":\"91050166\"},\"chapter_video_status\":{\"val\":2,\"vid\":\"90953361\"},\"co_create_new_role\":{\"val\":true,\"vid\":\"90611581\"},\"collection_enable_set_secret_status\":{\"val\":1,\"vid\":\"90124858\"},\"cover_editor_interaction_opti\":{\"val\":2,\"vid\":\"90599399\"},\"cover_filling_rate_increase_all\":{\"val\":0,\"vid\":\"15074840\"},\"cover_h265_ffmpeg_capture\":{\"val\":true,\"vid\":\"90166065\"},\"crc_config\":{\"val\":{\"cacheOptions\":false,\"crc32InMain\":false,\"crc32PreNum\":0,\"preCreateWorker\":false,\"skip1002\":false},\"vid\":\"15554557\"},\"creator_comment_manage\":{\"val\":1,\"vid\":\"90613695\"},\"creator_danmaku_manage\":{\"val\":{\"menus_show\":1},\"vid\":\"90118007\"},\"creator_data_bullet_analysis\":{\"val\":{\"bullet_analysis_tab_show\":2},\"vid\":\"90128271\"},\"creator_data_new\":{\"val\":true,\"vid\":\"90081040\"},\"creator_data_progress_analysis\":{\"val\":{\"fans_analysis_tab_show\":1},\"vid\":\"90128191\"},\"creator_pc\":{\"val\":{\"tab_ab_show_new_home\":1},\"vid\":\"90109488\"},\"creator_pc_1_3_intell_chapter\":{\"val\":1,\"vid\":\"90122502\"},\"creator_pc_clip\":{\"val\":{\"capcut\":1},\"vid\":\"90119963\"},\"creator_pc_cover_min_size\":{\"val\":2,\"vid\":\"90126311\"},\"creator_pc_data_center\":{\"val\":{\"is_new_live_content\":1},\"vid\":\"90111860\"},\"creator_pc_data_center_new_list\":{\"val\":1,\"vid\":\"90625082\"},\"creator_pc_game_mounted_anchor_reedit\":{\"val\":1,\"vid\":\"90122407\"},\"creator_pc_game_mounted_anchor_revision_v2\":{\"val\":2,\"vid\":\"90125303\"},\"creator_pc_game_mounted_game_activity_profit\":{\"val\":3,\"vid\":\"90127201\"},\"creator_pc_home\":{\"val\":{\"interactive_show_type\":2},\"vid\":\"90111556\"},\"creator_pc_image_music_optimization\":{\"val\":1,\"vid\":\"90962255\"},\"creator_pc_mission\":{\"val\":{\"visible\":1},\"vid\":\"90112463\"},\"creator_pc_modify_item_entrance\":{\"val\":1,\"vid\":\"90128660\"},\"creator_pc_new_cover_text\":{\"val\":true,\"vid\":\"90125008\"},\"creator_pc_org\":{\"val\":{\"new_org\":1},\"vid\":\"90123271\"},\"creator_pc_org_home\":{\"val\":{\"new_home\":1},\"vid\":\"90112354\"},\"creator_pc_recommend_cover_opt\":{\"val\":true,\"vid\":\"90127437\"},\"creator_pc_tab_ab\":{\"val\":{\"account_show\":2},\"vid\":\"90092974\"},\"creator_pc_upload_cancel_btn\":{\"val\":0,\"vid\":\"90173282\"},\"creator_pc_upload_progress_detail\":{\"val\":1,\"vid\":\"90173281\"},\"creator_pc_video_music_optimization\":{\"val\":1,\"vid\":\"90945842\"},\"creator_pc_video_quality_intro\":{\"val\":2,\"vid\":\"91037348\"},\"creator_pc_work_detail_version\":{\"val\":1,\"vid\":\"90356254\"},\"creator_publish_cover_check\":{\"val\":1,\"vid\":\"90122334\"},\"creator_school_nav\":{\"val\":{\"nav_type\":1},\"vid\":\"90081895\"},\"creator_upload_async\":{\"val\":1,\"vid\":\"90324260\"},\"creator_upload_cancel\":{\"val\":1,\"vid\":\"90124601\"},\"creator_uploader_tos_direct\":{\"val\":1,\"vid\":\"90126365\"},\"data_cover_rate\":{\"val\":{\"is_show_cover_rate\":true},\"vid\":\"90121311\"},\"dict\":{\"val\":{\"canShowUserDeclaration\":true},\"vid\":\"90114001\"},\"douyin_cover_imagelayer_editable\":{\"val\":true,\"vid\":\"90111484\"},\"douyin_outer_progress_enbale\":{\"val\":1,\"vid\":\"90118893\"},\"douyin_pc_creator_image_text\":{\"val\":true,\"vid\":\"90093311\"},\"download_frame_limit\":{\"val\":3,\"vid\":\"91217036\"},\"editor_filter\":{\"val\":true,\"vid\":\"90122909\"},\"enableChapterSelfMade\":{\"val\":1,\"vid\":\"90940916\"},\"enhance_cover_check_dual\":{\"val\":1,\"vid\":\"90906860\"},\"is_new_loki\":{\"val\":1,\"vid\":\"90975626\"},\"is_show_pc_content_analysis\":{\"val\":{\"enabled\":1},\"vid\":\"90118423\"},\"is_show_tagged_page\":{\"val\":true,\"vid\":\"90992719\"},\"limit_recommend_cover_local\":{\"val\":true,\"vid\":\"91283345\"},\"maxReadConcurrent\":{\"val\":5,\"vid\":\"13054949\"},\"openReadConcurrent\":{\"val\":true,\"vid\":\"13054949\"},\"publish_layout\":{\"val\":2,\"vid\":\"91020340\"},\"quick_fill\":{\"val\":true,\"vid\":\"90997687\"},\"recommend_chapter_async_link\":{\"val\":1,\"vid\":\"90129292\"},\"refine_cover_tool\":{\"val\":2,\"vid\":\"90120266\"},\"show_activity_tag\":{\"val\":true,\"vid\":\"90102355\"},\"show_info\":{\"val\":1,\"vid\":\"90126292\"},\"show_intellect_chapter_entry\":{\"val\":1,\"vid\":\"90094899\"},\"slardar_filter\":{\"val\":true,\"vid\":\"90122697\"},\"table_tab\":{\"val\":\"contribute\",\"vid\":\"90094565\"},\"test\":{\"val\":true,\"vid\":\"90082519\"},\"title_permission_new\":{\"val\":1,\"vid\":\"90111481\"},\"use_new_player\":{\"val\":true,\"vid\":\"91048272\"},\"vertical_video_double_cover\":{\"val\":1,\"vid\":\"91234029\"}},\"timestamp\":1772291480035,\"uuid\":\"111347309343\"}"
+        },
+        {
+          "name": "web_secsdk_runtime_cache",
+          "value": "{\"userAgentCheckReport\":[\"userAgentCheckReportcompute\"]}"
         },
         {
           "name": "security-sdk/s_sdk_server_cert_key",
           "value": "{\"cert\":\"-----BEGIN CERTIFICATE-----\\nMIIEfTCCBCKgAwIBAgIUXWdS2tzmSoewCWfKFyiWMrJqs/0wCgYIKoZIzj0EAwIw\\nMTELMAkGA1UEBhMCQ04xIjAgBgNVBAMMGXRpY2tldF9ndWFyZF9jYV9lY2RzYV8y\\nNTYwIBcNMjIxMTE4MDUyMDA2WhgPMjA2OTEyMzExNjAwMDBaMCQxCzAJBgNVBAYT\\nAkNOMRUwEwYDVQQDEwxlY2llcy1zZXJ2ZXIwWTATBgcqhkjOPQIBBggqhkjOPQMB\\nBwNCAASE2llDPlfc8Rq+5J5HXhg4edFjPnCF3Ua7JBoiE/foP9m7L5ELIcvxCgEx\\naRCHbQ8kCCK/ArZ4FX/qCobZAkToo4IDITCCAx0wDgYDVR0PAQH/BAQDAgWgMDEG\\nA1UdJQQqMCgGCCsGAQUFBwMBBggrBgEFBQcDAgYIKwYBBQUHAwMGCCsGAQUFBwME\\nMCkGA1UdDgQiBCABydxqGrVEHhtkCWTb/vicGpDZPFPDxv82wiuywUlkBDArBgNV\\nHSMEJDAigCAypWfqjmRIEo3MTk1Ae3MUm0dtU3qk0YDXeZSXeyJHgzCCAZQGCCsG\\nAQUFBwEBBIIBhjCCAYIwRgYIKwYBBQUHMAGGOmh0dHA6Ly9uZXh1cy1wcm9kdWN0\\naW9uLmJ5dGVkYW5jZS5jb20vYXBpL2NlcnRpZmljYXRlL29jc3AwRgYIKwYBBQUH\\nMAGGOmh0dHA6Ly9uZXh1cy1wcm9kdWN0aW9uLmJ5dGVkYW5jZS5uZXQvYXBpL2Nl\\ncnRpZmljYXRlL29jc3AwdwYIKwYBBQUHMAKGa2h0dHA6Ly9uZXh1cy1wcm9kdWN0\\naW9uLmJ5dGVkYW5jZS5jb20vYXBpL2NlcnRpZmljYXRlL2Rvd25sb2FkLzQ4RjlD\\nMEU3QjBDNUE3MDVCOTgyQkU1NTE3MDVGNjQ1QzhDODc4QTguY3J0MHcGCCsGAQUF\\nBzAChmtodHRwOi8vbmV4dXMtcHJvZHVjdGlvbi5ieXRlZGFuY2UubmV0L2FwaS9j\\nZXJ0aWZpY2F0ZS9kb3dubG9hZC80OEY5QzBFN0IwQzVBNzA1Qjk4MkJFNTUxNzA1\\nRjY0NUM4Qzg3OEE4LmNydDCB5wYDVR0fBIHfMIHcMGygaqBohmZodHRwOi8vbmV4\\ndXMtcHJvZHVjdGlvbi5ieXRlZGFuY2UuY29tL2FwaS9jZXJ0aWZpY2F0ZS9jcmwv\\nNDhGOUMwRTdCMEM1QTcwNUI5ODJCRTU1MTcwNUY2NDVDOEM4NzhBOC5jcmwwbKBq\\noGiGZmh0dHA6Ly9uZXh1cy1wcm9kdWN0aW9uLmJ5dGVkYW5jZS5uZXQvYXBpL2Nl\\ncnRpZmljYXRlL2NybC80OEY5QzBFN0IwQzVBNzA1Qjk4MkJFNTUxNzA1RjY0NUM4\\nQzg3OEE4LmNybDAKBggqhkjOPQQDAgNJADBGAiEAqMjT5ADMdGMeaImoJK4J9jzE\\nLqZ573rNjsT3k14pK50CIQCLpWHVKWi71qqqrMjiSDvUhpyO1DpTPRHlavPRuaNm\\nww==\\n-----END CERTIFICATE-----\",\"sn\":\"533240336124694022040808462028007165443034493949\",\"createdTime\":1772279345790}"
         },
         {
-          "name": "__tea_cache_first_1661",
-          "value": "1"
-        },
-        {
           "name": "SLARDARdouyin_creator",
-          "value": "JTdCJTIydXNlcklkJTIyOiUyMjExMTM0NzMwOTM0MyUyMiwlMjJkZXZpY2VJZCUyMjolMjI5ZWI4N2M4NS0yMmJhLTRjOWYtYWI5Yi0xNjA0MWVmNjkzNTUlMjIsJTIyZXhwaXJlcyUyMjoxNzgwMDU1MzY0ODU5JTdE"
+          "value": "JTdCJTIydXNlcklkJTIyOiUyMjExMTM0NzMwOTM0MyUyMiwlMjJkZXZpY2VJZCUyMjolMjI5ZWI4N2M4NS0yMmJhLTRjOWYtYWI5Yi0xNjA0MWVmNjkzNTUlMjIsJTIyZXhwaXJlcyUyMjoxNzgwMDY3NDc4NTUwJTdE"
         },
         {
           "name": "__tea_cache_first_408314",
           "value": "1"
         },
         {
+          "name": "__tea_cache_first_1661",
+          "value": "1"
+        },
+        {
           "name": "https://creator.douyin.com-operation",
           "value": "false"
+        },
+        {
+          "name": "__tea_cache_tokens_408314",
+          "value": "{\"web_id\":\"7611933860175758882\",\"user_unique_id\":\"7611933860175758882\",\"timestamp\":1772291480662,\"_type_\":\"default\"}"
         },
         {
           "name": "security-sdk/s_sdk_cert_key",
@@ -475,23 +447,23 @@
         },
         {
           "name": "SLARDARuc_secure_sdk",
-          "value": "JTdCJTIydXNlcklkJTIyOiUyMmMyZDE4MWJjLWU2NzktNGQ0MC1iN2E1LTdlYzliNzA0NTU1YyUyMiwlMjJkZXZpY2VJZCUyMjolMjI1YWI5ZmJhNS1hMWM2LTRhOWMtOTIyZS01ZDI1MjdmMjk4OWMlMjIsJTIyZXhwaXJlcyUyMjoxNzgwMDU1MzY1MTA0JTdE"
+          "value": "JTdCJTIydXNlcklkJTIyOiUyMmMyZDE4MWJjLWU2NzktNGQ0MC1iN2E1LTdlYzliNzA0NTU1YyUyMiwlMjJkZXZpY2VJZCUyMjolMjI1YWI5ZmJhNS1hMWM2LTRhOWMtOTIyZS01ZDI1MjdmMjk4OWMlMjIsJTIyZXhwaXJlcyUyMjoxNzgwMDY3NDc4NjEyJTdE"
         },
         {
           "name": "__tea_cache_tokens_1661",
-          "value": "{\"web_id\":\"1411657410140105148\",\"user_unique_id\":\"111347309343\",\"timestamp\":1772279365108,\"_type_\":\"default\"}"
+          "value": "{\"web_id\":\"1411657410140105148\",\"user_unique_id\":\"111347309343\",\"timestamp\":1772291478616,\"_type_\":\"default\"}"
         },
         {
           "name": "=^_^=athena_web_id",
           "value": "2b287eab-4efe-408a-8f50-12e6d02e22c7"
         },
         {
-          "name": "security-sdk/s_sdk_crypt_sdk",
-          "value": "{\"data\":\"{\\\"ec_privateKey\\\":\\\"-----BEGIN PRIVATE KEY-----\\\\r\\\\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgmS3CZM04FPIfehlA\\\\r\\\\njYwJa6DwdqTGEy8xtz0C0Dk2hnuhRANCAAQAraJL1y1jNVemTove6MmrTIj+prQZ\\\\r\\\\nl8VlF+ZXa+XpB5JbBwZWSkIFsZ7d1BlYUDetVwDfXVIG2Y/esX/yXY+b\\\\r\\\\n-----END PRIVATE KEY-----\\\\r\\\\n\\\",\\\"ec_publicKey\\\":\\\"-----BEGIN PUBLIC KEY-----\\\\r\\\\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEAK2iS9ctYzVXpk6L3ujJq0yI/qa0\\\\r\\\\nGZfFZRfmV2vl6QeSWwcGVkpCBbGe3dQZWFA3rVcA311SBtmP3rF/8l2Pmw==\\\\r\\\\n-----END PUBLIC KEY-----\\\\r\\\\n\\\",\\\"ec_csr\\\":\\\"\\\"}\"}"
-        },
-        {
           "name": "douyin_creator_master_performance_level",
           "value": "{}"
+        },
+        {
+          "name": "security-sdk/s_sdk_crypt_sdk",
+          "value": "{\"data\":\"{\\\"ec_privateKey\\\":\\\"-----BEGIN PRIVATE KEY-----\\\\r\\\\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgmS3CZM04FPIfehlA\\\\r\\\\njYwJa6DwdqTGEy8xtz0C0Dk2hnuhRANCAAQAraJL1y1jNVemTove6MmrTIj+prQZ\\\\r\\\\nl8VlF+ZXa+XpB5JbBwZWSkIFsZ7d1BlYUDetVwDfXVIG2Y/esX/yXY+b\\\\r\\\\n-----END PRIVATE KEY-----\\\\r\\\\n\\\",\\\"ec_publicKey\\\":\\\"-----BEGIN PUBLIC KEY-----\\\\r\\\\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEAK2iS9ctYzVXpk6L3ujJq0yI/qa0\\\\r\\\\nGZfFZRfmV2vl6QeSWwcGVkpCBbGe3dQZWFA3rVcA311SBtmP3rF/8l2Pmw==\\\\r\\\\n-----END PUBLIC KEY-----\\\\r\\\\n\\\",\\\"ec_csr\\\":\\\"\\\"}\"}"
         }
       ]
     },
@@ -521,7 +493,7 @@
         },
         {
           "name": "SLARDARcard_factory",
-          "value": "JTdCJTIydXNlcklkJTIyOiUyMjc0Y2I2MmEzLTM5MmQtNDUzMi1hMWEyLWY4YmZjZDlhODYyNiUyMiwlMjJkZXZpY2VJZCUyMjolMjI2YmZkN2RiMy00ZWFmLTQ4MzUtODk5Yi00MDA5N2Q0MjQzOTUlMjIsJTIyZXhwaXJlcyUyMjoxNzgwMDU1MzY3MTQwJTdE"
+          "value": "JTdCJTIydXNlcklkJTIyOiUyMjc0Y2I2MmEzLTM5MmQtNDUzMi1hMWEyLWY4YmZjZDlhODYyNiUyMiwlMjJkZXZpY2VJZCUyMjolMjI2YmZkN2RiMy00ZWFmLTQ4MzUtODk5Yi00MDA5N2Q0MjQzOTUlMjIsJTIyZXhwaXJlcyUyMjoxNzgwMDY3NDgwMjU2JTdE"
         },
         {
           "name": "__tea_cache_refer_648684",
@@ -529,7 +501,7 @@
         },
         {
           "name": "__tea_cache_tokens_648684",
-          "value": "{\"web_id\":\"7611881814584133120\",\"user_unique_id\":\"7611881814584133120\",\"timestamp\":1772279366935,\"_type_\":\"default\"}"
+          "value": "{\"web_id\":\"7611881814584133120\",\"user_unique_id\":\"7611881814584133120\",\"timestamp\":1772291479838,\"_type_\":\"default\"}"
         },
         {
           "name": "__tea_cache_first_648684",
@@ -537,7 +509,7 @@
         },
         {
           "name": "byted_im_tk",
-          "value": "{\"1772279366863713\":\"cea89193687f1d36687dd3ad9d42abf0\"}"
+          "value": "{\"1772279366863713\":\"cea89193687f1d36687dd3ad9d42abf0\",\"1772291479855490\":\"08d64374218d5ca6879d64a6765badd0\"}"
         },
         {
           "name": "__tea_cache_first_2970",
@@ -545,7 +517,7 @@
         },
         {
           "name": "__tea_cache_tokens_2970",
-          "value": "{\"web_id\":\"7611881813006894592\",\"user_unique_id\":\"7611881813006894592\",\"timestamp\":1772279366893,\"_type_\":\"default\"}"
+          "value": "{\"web_id\":\"7611881813006894592\",\"user_unique_id\":\"7611881813006894592\",\"timestamp\":1772291479659,\"_type_\":\"default\"}"
         }
       ]
     }

@@ -1,4 +1,4 @@
-import { type Page } from 'playwright';
+import { type Page, type Frame } from 'playwright';
 import path from 'path';
 import fs from 'fs';
 
@@ -7,7 +7,6 @@ if (!fs.existsSync(DEBUG_DIR)) {
   fs.mkdirSync(DEBUG_DIR, { recursive: true });
 }
 
-// Helper to take screenshots safely without crashing the main flow
 async function safeScreenshot(page: Page, filename: string, screenshots: string[], log: (msg: string) => void) {
   try {
     await page.screenshot({ 
@@ -21,13 +20,54 @@ async function safeScreenshot(page: Page, filename: string, screenshots: string[
   }
 }
 
-// Helper to check for security/SMS verification popups
-async function checkForVerification(page: Page): Promise<boolean> {
-  const text = await page.evaluate(() => document.body.innerText);
-  return text.includes('获取短信验证码') || 
-         text.includes('安全验证') || 
-         text.includes('向您的手机号') || 
-         text.includes('验证码已发送');
+// Deep check for verification modals across the main page and ALL iframes
+async function checkForVerification(page: Page, log: (msg: string) => void): Promise<boolean> {
+  const checkFrame = async (frame: Frame | Page) => {
+    try {
+      const text = await frame.evaluate(() => document.body.innerText || '');
+      // Check common Douyin verification phrases
+      if (text.includes('获取短信验证码') || 
+          text.includes('安全验证') || 
+          text.includes('向您的手机号') || 
+          text.includes('验证码已发送') ||
+          text.includes('拖动滑块') ||
+          text.includes('完成拼图')) {
+        return true;
+      }
+
+      // Check common Douyin verification DOM elements (often empty but visible)
+      const hasModal = await frame.evaluate(() => {
+        return !!(
+          document.querySelector('.secsdk-captcha-drag-icon') || 
+          document.querySelector('#captcha_container') || 
+          document.querySelector('.captcha_verify_container') ||
+          document.querySelector('.verify-bar-close')
+        );
+      });
+
+      if (hasModal) return true;
+      
+    } catch (e) {
+      // Ignore evaluation errors for cross-origin frames
+    }
+    return false;
+  };
+
+  // Check main page
+  if (await checkFrame(page)) {
+    log('Detected verification modal on main page');
+    return true;
+  }
+
+  // Check all iframes
+  for (const frame of page.frames()) {
+    if (await checkFrame(frame)) {
+      log('Detected verification modal inside an iframe');
+      return true;
+    }
+  }
+
+  return false;
 }
 
 export async function uploadToDouyin(
@@ -49,7 +89,6 @@ export async function uploadToDouyin(
     const timestamp = Date.now();
     log(`Starting Douyin upload for: ${title}`);
     
-    // 1. Anti-detection & Network optimization
     await page.addInitScript(() => {
       Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
     });
@@ -63,7 +102,6 @@ export async function uploadToDouyin(
       }
     });
     
-    // 2. Navigate
     log('Navigating to Douyin creator portal...');
     await page.goto('https://creator.douyin.com/creator-micro/content/upload', { 
         waitUntil: 'commit', 
@@ -77,10 +115,10 @@ export async function uploadToDouyin(
       return { success: false, message: '登录态已失效，页面停留在登录界面。请前往“账号管理”重新扫码登录。', logs, screenshots };
     }
 
-    if (await checkForVerification(page)) {
+    if (await checkForVerification(page, log)) {
       return { 
         success: false, 
-        message: '触发了抖音的安全验证机制（需要手机验证码）。自动化服务无法完成此操作。请前往“账号管理”重新点击登录，在弹出的可见浏览器中手动完成验证码输入以刷新信任状态。', 
+        message: '触发了抖音的安全验证机制。请前往“账号管理”重新点击登录，在弹出的可见浏览器中手动完成验证码输入以刷新信任状态。', 
         logs, 
         screenshots 
       };
@@ -89,7 +127,6 @@ export async function uploadToDouyin(
     await page.waitForTimeout(4000); 
     await safeScreenshot(page, `douyin_${timestamp}_2_upload_ready.png`, screenshots, log);
 
-    // 3. Upload the file
     log('Searching for file input...');
     const fileInput = await page.locator('input[type="file"]').first();
     await fileInput.waitFor({ state: 'attached', timeout: 30000 }).catch(() => log('Timeout waiting for file input'));
@@ -100,7 +137,6 @@ export async function uploadToDouyin(
     await fileInput.setInputFiles(filePath);
     await safeScreenshot(page, `douyin_${timestamp}_3_file_selected.png`, screenshots, log);
     
-    // 4. Wait for upload to complete
     log('Waiting for video upload to complete (this might take a few minutes)...');
     
     try {
@@ -116,16 +152,15 @@ export async function uploadToDouyin(
     await safeScreenshot(page, `douyin_${timestamp}_4_upload_complete.png`, screenshots, log);
     await page.waitForTimeout(3000); 
 
-    if (await checkForVerification(page)) {
+    if (await checkForVerification(page, log)) {
       return { 
         success: false, 
-        message: '上传完成后触发了安全验证（需要验证码）。请前往“账号管理”重新登录并在真实浏览器环境中完成操作以刷新信任状态。', 
+        message: '上传完成后触发了安全验证。请前往“账号管理”重新登录并在真实浏览器环境中完成操作以刷新信任状态。', 
         logs, 
         screenshots 
       };
     }
 
-    // 5. Fill in title & description
     log('Filling description and tags...');
     
     const editor = page.locator('.zone-container, .editor-kit-container, [contenteditable="true"]').first();
@@ -142,7 +177,6 @@ export async function uploadToDouyin(
     await safeScreenshot(page, `douyin_${timestamp}_5_text_filled.png`, screenshots, log);
     await page.waitForTimeout(1000);
 
-    // 6. Click Publish
     log('Publishing...');
     const publishButton = page.locator('button', { hasText: /^发布$/ }).first();
     
@@ -161,29 +195,55 @@ export async function uploadToDouyin(
     
     await publishButton.click({ force: true });
     
-    // 7. Wait for success indicator
-    log('Waiting for success confirmation (URL change or Success Toast)...');
+    log('Waiting for success confirmation or security challenge...');
     
     try {
-      await Promise.race([
+      // Race: wait for success text OR url change OR verification modal
+      const result = await Promise.race([
         page.waitForFunction(() => {
           const text = document.body.innerText;
           return text.includes('发布成功') || text.includes('投稿成功') || text.includes('进入审核') || text.includes('去查看');
-        }, { timeout: 30000 }),
-        page.waitForURL('**/manage/**', { timeout: 30000 })
+        }, { timeout: 30000 }).then(() => 'success_text'),
+        
+        page.waitForURL('**/manage/**', { timeout: 30000 }).then(() => 'success_url'),
+        
+        // This function continually polls for the verification modal
+        new Promise<string>((resolve) => {
+          const interval = setInterval(async () => {
+            const hasVerif = await checkForVerification(page, () => {});
+            if (hasVerif) {
+              clearInterval(interval);
+              resolve('verification_blocked');
+            }
+          }, 1000);
+          // Cleanup interval after 30s
+          setTimeout(() => clearInterval(interval), 30000);
+        })
       ]);
+
+      await safeScreenshot(page, `douyin_${timestamp}_7_post_click.png`, screenshots, log);
+
+      if (result === 'verification_blocked') {
+        log('Verification modal popped up immediately after clicking publish.');
+        return { 
+          success: false, 
+          message: '【发布被拦截】点击发布后，抖音弹出了安全验证（手机短信或滑块）。请前往“账号管理” -> 点击“抖音登录”，在弹出的可视窗口中随意发布一个草稿来完成验证码验证，即可解除此设备的风控限制。', 
+          logs, 
+          screenshots 
+        };
+      }
       
-      await safeScreenshot(page, `douyin_${timestamp}_7_success.png`, screenshots, log);
       log('Published successfully!');
       return { success: true, message: '抖音发布成功！(已确认页面跳转或成功提示)', logs, screenshots };
+
     } catch (e) {
       await safeScreenshot(page, `douyin_${timestamp}_8_failed_detect.png`, screenshots, log);
       
-      // Final verification check
-      if (await checkForVerification(page)) {
+      // Fallback check if the race timed out
+      if (await checkForVerification(page, log)) {
         return { 
           success: false, 
-          message: '点击发布时触发了安全验证（手机验证码）。这是平台风控机制。请前往“账号管理”重新点击登录，并在真实可见的浏览器内完成一次手动操作来解除风控。', 
+          message: '【发布被拦截】检测到安全验证。请前往“账号管理”中重新点击登录，并在可见浏览器内手动发布一次以解除风控。', 
           logs, 
           screenshots 
         };
@@ -201,7 +261,7 @@ export async function uploadToDouyin(
       }
       
       log('Failed to detect success state.');
-      return { success: false, message: '点击了发布，但未检测到成功标志。请查看调试截图。', logs, screenshots };
+      return { success: false, message: '点击了发布，但未检测到成功标志且未发现验证码。请查看调试截图。', logs, screenshots };
     }
 
   } catch (error: any) {
