@@ -7,6 +7,19 @@ if (!fs.existsSync(DEBUG_DIR)) {
   fs.mkdirSync(DEBUG_DIR, { recursive: true });
 }
 
+// Helper to take screenshots without crashing the main flow due to font/image loading timeouts
+async function safeScreenshot(page: Page, filename: string) {
+  try {
+    await page.screenshot({ 
+      path: path.join(DEBUG_DIR, filename),
+      timeout: 5000, // Do not wait more than 5 seconds for a debug screenshot
+      animations: 'disabled', // Prevent waiting for CSS animations
+    });
+  } catch (err) {
+    console.log(`Debug screenshot failed for ${filename} (likely font timeout), continuing anyway...`);
+  }
+}
+
 export async function uploadToDouyin(
   page: Page,
   file: File | string, // Accept a local file path
@@ -25,7 +38,7 @@ export async function uploadToDouyin(
     
     // 1. Navigate to the creator portal upload page
     await page.goto('https://creator.douyin.com/creator-micro/content/upload', { waitUntil: 'domcontentloaded' });
-    await page.screenshot({ path: path.join(DEBUG_DIR, `douyin_${timestamp}_1_initial.png`) });
+    await safeScreenshot(page, `douyin_${timestamp}_1_initial.png`);
     
     // Safety check: Make sure we are not on login page
     if (page.url().includes('login') || (await page.locator('.login-container').count()) > 0) {
@@ -34,7 +47,7 @@ export async function uploadToDouyin(
 
     // Sometimes the upload modal or page structure takes time to render completely in SPA
     await page.waitForTimeout(4000); 
-    await page.screenshot({ path: path.join(DEBUG_DIR, `douyin_${timestamp}_2_upload_ready.png`) });
+    await safeScreenshot(page, `douyin_${timestamp}_2_upload_ready.png`);
 
     // 2. Upload the file
     // Some versions of Douyin use input[accept*="video"], others just a generic input file inside a dropzone
@@ -43,7 +56,7 @@ export async function uploadToDouyin(
     
     console.log('Uploading file:', filePath);
     await fileInput.setInputFiles(filePath);
-    await page.screenshot({ path: path.join(DEBUG_DIR, `douyin_${timestamp}_3_file_selected.png`) });
+    await safeScreenshot(page, `douyin_${timestamp}_3_file_selected.png`);
     
     // 3. Wait for upload to complete
     console.log('Waiting for video upload to complete...');
@@ -58,7 +71,7 @@ export async function uploadToDouyin(
       console.log('Timeout waiting for text indicators. Proceeding to check description form.');
     }
     
-    await page.screenshot({ path: path.join(DEBUG_DIR, `douyin_${timestamp}_4_upload_complete.png`) });
+    await safeScreenshot(page, `douyin_${timestamp}_4_upload_complete.png`);
     await page.waitForTimeout(3000); // UI stabilization
 
     // 4. Fill in title & description
@@ -77,7 +90,7 @@ export async function uploadToDouyin(
     await page.keyboard.press('Backspace').catch(() => {});
     await page.keyboard.insertText(fullText);
     
-    await page.screenshot({ path: path.join(DEBUG_DIR, `douyin_${timestamp}_5_text_filled.png`) });
+    await safeScreenshot(page, `douyin_${timestamp}_5_text_filled.png`);
     await page.waitForTimeout(1000);
 
     // 5. Click Publish
@@ -98,7 +111,7 @@ export async function uploadToDouyin(
     await publishButton.scrollIntoViewIfNeeded().catch(() => {});
     await page.waitForTimeout(1000); 
     
-    await page.screenshot({ path: path.join(DEBUG_DIR, `douyin_${timestamp}_6_before_publish_click.png`) });
+    await safeScreenshot(page, `douyin_${timestamp}_6_before_publish_click.png`);
     
     await publishButton.click({ force: true });
     
@@ -115,10 +128,10 @@ export async function uploadToDouyin(
         page.waitForURL('**/manage/**', { timeout: 25000 })
       ]);
       
-      await page.screenshot({ path: path.join(DEBUG_DIR, `douyin_${timestamp}_7_success.png`) });
+      await safeScreenshot(page, `douyin_${timestamp}_7_success.png`);
       return { success: true, message: '抖音发布成功！(已确认页面跳转或成功提示)' };
     } catch (e) {
-      await page.screenshot({ path: path.join(DEBUG_DIR, `douyin_${timestamp}_8_failed_detect.png`) });
+      await safeScreenshot(page, `douyin_${timestamp}_8_failed_detect.png`);
       
       // Secondary check: sometimes an overlay blocks the click or there is a validation error (e.g. video too short)
       const pageText = await page.evaluate(() => document.body.innerText);

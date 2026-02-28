@@ -99,3 +99,22 @@ Filling description and tags...
 Publishing...
 Waiting for success confirmation...
  POST /api/publish 200 in 37.4s (compile: 48ms, render: 37.3s)
+Starting Douyin upload for: test at 1772280449265
+Uploading file: /Users/codeblackhole/opencode-ws/social-publisher/uploads/1772280448703-naruto-1_no_watermark.mp4
+Waiting for video upload to complete...
+Timeout waiting for text indicators. Proceeding to check description form.
+Douyin upload failed: Error [TimeoutError]: page.screenshot: Timeout 30000ms exceeded.
+Call log:
+[2m  - taking page screenshot[22m
+[2m  - waiting for fonts to load...[22m
+
+    at uploadToDouyin (src/lib/publishers/douyin.ts:61:16)
+    at async POST (src/app/api/publish/route.ts:60:24)
+  59 |     }
+  60 |     
+> 61 |     await page.screenshot({ path: path.join(DEBUG_DIR, `douyin_${timestamp}_4_upload_complete.png`) });
+     |                ^
+  62 |     await page.waitForTimeout(3000); // UI stabilization
+  63 |
+  64 |     // 4. Fill in title & description
+ POST /api/publish 200 in 68s (compile: 61ms, render: 68s)
