@@ -5,30 +5,37 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
-import { FileIcon, ImageIcon, VideoIcon, XIcon } from "lucide-react"
+import { FileIcon, ImageIcon, VideoIcon, XIcon, CheckCircleIcon, XCircleIcon, ClockIcon } from "lucide-react"
+import { PublishTask, PublishResult } from "@/lib/db"
+import Image from "next/image"
 
 export default function Home() {
+  const [activeTab, setActiveTab] = useState<'publish' | 'history'>('publish')
+  
+  // Publish State
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [loginStatus, setLoginStatus] = useState({
     douyin: false,
     bilibili: false,
     xiaohongshu: false,
-    youtube: true,
+    youtube: false,
   })
   const [isLoggingIn, setIsLoggingIn] = useState<string | null>(null)
-  
   const [platforms, setPlatforms] = useState({
     douyin: false,
     bilibili: false,
     xiaohongshu: false,
     youtube: false,
   })
-
-  const [publishResults, setPublishResults] = useState<{platform: string, success: boolean, message: string}[] | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  
+  // History State
+  const [tasks, setTasks] = useState<PublishTask[]>([])
+  const [selectedTask, setSelectedTask] = useState<PublishTask | null>(null)
 
   useEffect(() => {
     fetchLoginStatus()
+    fetchTasks()
   }, [])
 
   const fetchLoginStatus = async () => {
@@ -41,9 +48,19 @@ export default function Home() {
     }
   }
 
+  const fetchTasks = async () => {
+    try {
+      const res = await fetch('/api/tasks')
+      const data = await res.json()
+      setTasks(data)
+    } catch (e) {
+      console.error('Failed to fetch tasks')
+    }
+  }
+
+  // ----- Publish Logic -----
+
   const handleLogin = async (platform: string) => {
-    if (platform === 'youtube') return
-    
     setIsLoggingIn(platform)
     try {
       alert(`浏览器即将打开，请在打开的页面中扫码或输入密码登录 ${platform}。\n登录完成后关闭页面即可保存凭据。`)
@@ -84,7 +101,6 @@ export default function Home() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsSubmitting(true)
-    setPublishResults(null)
     
     const form = e.currentTarget
     const selectedPlatforms = Object.entries(platforms).filter(([_, isSelected]) => isSelected).map(([key]) => key)
@@ -115,8 +131,11 @@ export default function Home() {
       })
 
       const data = await response.json()
-      if (data.results) {
-        setPublishResults(data.results)
+      if (data.task) {
+        // Refresh tasks and jump to history view to show details
+        await fetchTasks()
+        setSelectedTask(data.task)
+        setActiveTab('history')
       } else {
         alert(data.error || '发布失败')
       }
@@ -144,173 +163,273 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 font-sans">
-      <div className="max-w-3xl mx-auto space-y-8">
+    <div className="min-h-screen bg-gray-50 font-sans">
+      {/* Top Navigation */}
+      <div className="bg-white border-b shadow-sm sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-center space-x-8">
+            <button
+              onClick={() => setActiveTab('publish')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'publish'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              一键发布
+            </button>
+            <button
+              onClick={() => { setActiveTab('history'); setSelectedTask(null); }}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'history'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              发布历史与日志
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         
-        {/* Account Management Section */}
-        <Card className="w-full">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold text-gray-900">账号管理</CardTitle>
-            <CardDescription>在发布前，请先授权您的账号。基于 Playwright 自动化登录。</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {[
-                { id: 'douyin', name: '抖音' },
-                { id: 'bilibili', name: 'B站' },
-                { id: 'xiaohongshu', name: '小红书' },
-                { id: 'youtube', name: 'YouTube' }
-              ].map(p => (
-                <div key={p.id} className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white shadow-sm space-y-3">
-                  <span className="font-semibold">{p.name}</span>
-                  <div className="flex flex-col items-center space-y-2 w-full">
-                    {loginStatus[p.id as keyof typeof loginStatus] ? (
-                      <span className="text-green-600 text-sm font-medium px-2 py-1 bg-green-50 rounded-full border border-green-200">已连接</span>
-                    ) : (
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="w-full text-xs"
-                        onClick={() => handleLogin(p.id)}
-                        disabled={isLoggingIn !== null}
-                      >
-                        {isLoggingIn === p.id ? '登录中...' : '点击登录'}
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Publishing Form */}
-        <Card className="w-full">
-          <CardHeader>
-            <CardTitle className="text-3xl font-bold text-center text-gray-900">
-              一键分发自媒体平台
-            </CardTitle>
-            <CardDescription className="text-center text-lg mt-2">
-              填写一次内容，自动发布到抖音、B站、小红书和YouTube
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form id="publish-form" onSubmit={handleSubmit} className="space-y-6">
-              
-              <div className="space-y-2">
-                <label htmlFor="title" className="text-sm font-medium leading-none">
-                  视频/图文标题 <span className="text-red-500">*</span>
-                </label>
-                <Input name="title" id="title" required placeholder="请输入引人注目的标题..." />
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="description" className="text-sm font-medium leading-none">
-                  内容描述 <span className="text-red-500">*</span>
-                </label>
-                <Textarea name="description" id="description" required placeholder="请填写详细的内容描述，支持添加相关的话题标签等信息..." className="min-h-[120px]" />
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="tags" className="text-sm font-medium leading-none">
-                  标签 (Tags)
-                </label>
-                <Input name="tags" id="tags" placeholder="例如: 科技, 数码, 评测 (用逗号分隔)" />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium leading-none">
-                  上传媒体文件 (视频/图片) <span className="text-red-500">*</span>
-                </label>
-                <div className="flex items-center justify-center w-full">
-                  {!selectedFile ? (
-                    <label htmlFor="dropzone-file" className="flex flex-col items-center justify-center w-full h-40 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
-                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        <svg className="w-8 h-8 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
-                          <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
-                        </svg>
-                        <p className="mb-2 text-sm text-gray-500"><span className="font-semibold text-blue-600">点击上传</span> 或拖拽文件到这里</p>
-                        <p className="text-xs text-gray-500">MP4, MOV, PNG, JPG (最大 2GB)</p>
-                      </div>
-                      <input name="file" id="dropzone-file" type="file" className="hidden" accept="video/mp4,video/quicktime,image/jpeg,image/png" required onChange={handleFileChange} />
-                    </label>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center w-full h-40 border-2 border-blue-300 border-solid rounded-lg bg-blue-50 relative">
-                      <button 
-                        type="button" 
-                        onClick={clearFile}
-                        className="absolute top-2 right-2 p-1 bg-white rounded-full text-gray-500 hover:text-red-500 shadow-sm"
-                        title="移除文件"
-                      >
-                        <XIcon className="w-5 h-5" />
-                      </button>
-                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        {getFileIcon()}
-                        <p className="mt-3 text-sm font-medium text-gray-900 truncate max-w-[250px]">{selectedFile.name}</p>
-                        <p className="text-xs text-gray-500 mt-1">{formatFileSize(selectedFile.size)}</p>
-                        <label htmlFor="dropzone-file" className="mt-4 text-xs font-semibold text-blue-600 cursor-pointer hover:underline">
-                          更换文件
-                        </label>
-                        <input name="file" id="dropzone-file" type="file" className="hidden" accept="video/mp4,video/quicktime,image/jpeg,image/png" onChange={handleFileChange} />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-3 pt-4 border-t">
-                <label className="text-base font-semibold">
-                  选择分发平台 <span className="text-red-500">*</span>
-                </label>
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                  <div className="flex items-center space-x-2 bg-white p-3 rounded-md border shadow-sm opacity-100">
-                    <Checkbox id="douyin" disabled={!loginStatus.douyin} checked={platforms.douyin} onCheckedChange={() => handlePlatformChange('douyin')} />
-                    <label htmlFor="douyin" className={`text-sm font-medium leading-none ${!loginStatus.douyin ? 'text-gray-400 cursor-not-allowed' : 'cursor-pointer'}`}>抖音</label>
-                  </div>
-                  <div className="flex items-center space-x-2 bg-white p-3 rounded-md border shadow-sm">
-                    <Checkbox id="bilibili" disabled={!loginStatus.bilibili} checked={platforms.bilibili} onCheckedChange={() => handlePlatformChange('bilibili')} />
-                    <label htmlFor="bilibili" className={`text-sm font-medium leading-none ${!loginStatus.bilibili ? 'text-gray-400 cursor-not-allowed' : 'cursor-pointer'}`}>B站 (Bilibili)</label>
-                  </div>
-                  <div className="flex items-center space-x-2 bg-white p-3 rounded-md border shadow-sm">
-                    <Checkbox id="xiaohongshu" disabled={!loginStatus.xiaohongshu} checked={platforms.xiaohongshu} onCheckedChange={() => handlePlatformChange('xiaohongshu')} />
-                    <label htmlFor="xiaohongshu" className={`text-sm font-medium leading-none ${!loginStatus.xiaohongshu ? 'text-gray-400 cursor-not-allowed' : 'cursor-pointer'}`}>小红书</label>
-                  </div>
-                  <div className="flex items-center space-x-2 bg-white p-3 rounded-md border shadow-sm">
-                    <Checkbox id="youtube" disabled={!loginStatus.youtube} checked={platforms.youtube} onCheckedChange={() => handlePlatformChange('youtube')} />
-                    <label htmlFor="youtube" className={`text-sm font-medium leading-none ${!loginStatus.youtube ? 'text-gray-400 cursor-not-allowed' : 'cursor-pointer'}`}>YouTube</label>
-                  </div>
-                </div>
-                <p className="text-xs text-gray-500 mt-2">提示：必须先在账号管理中登录，才能选择对应的平台。</p>
-              </div>
-            </form>
-
-            {publishResults && (
-              <div className="mt-8 pt-6 border-t">
-                <h3 className="text-lg font-bold mb-4">发布结果</h3>
-                <div className="space-y-3">
-                  {publishResults.map((result, idx) => (
-                    <div key={idx} className={`p-4 rounded-md border ${result.success ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
-                      <div className="flex items-center">
-                        <div className={`font-bold mr-2 ${result.success ? 'text-green-700' : 'text-red-700'}`}>
-                          {result.platform === 'douyin' && '抖音'}
-                          {result.platform === 'bilibili' && 'B站'}
-                          {result.platform === 'xiaohongshu' && '小红书'}
-                          {result.platform === 'youtube' && 'YouTube'}:
-                        </div>
-                        <span className="text-gray-700">{result.message}</span>
+        {/* ==================== PUBLISH TAB ==================== */}
+        {activeTab === 'publish' && (
+          <div className="space-y-8">
+            {/* Account Management Section */}
+            <Card className="w-full">
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold text-gray-900">账号管理</CardTitle>
+                <CardDescription>在发布前，请先授权您的账号。基于 Playwright 自动化登录。</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {[
+                    { id: 'douyin', name: '抖音' },
+                    { id: 'bilibili', name: 'B站' },
+                    { id: 'xiaohongshu', name: '小红书' },
+                    { id: 'youtube', name: 'YouTube' }
+                  ].map(p => (
+                    <div key={p.id} className="flex flex-col items-center justify-center p-4 border rounded-lg bg-white shadow-sm space-y-3">
+                      <span className="font-semibold">{p.name}</span>
+                      <div className="flex flex-col items-center space-y-2 w-full">
+                        {loginStatus[p.id as keyof typeof loginStatus] ? (
+                          <span className="text-green-600 text-sm font-medium px-2 py-1 bg-green-50 rounded-full border border-green-200">已连接</span>
+                        ) : (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="w-full text-xs"
+                            onClick={() => handleLogin(p.id)}
+                            disabled={isLoggingIn !== null}
+                          >
+                            {isLoggingIn === p.id ? '登录中...' : '点击登录'}
+                          </Button>
+                        )}
                       </div>
                     </div>
                   ))}
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Publishing Form */}
+            <Card className="w-full">
+              <CardHeader>
+                <CardTitle className="text-3xl font-bold text-center text-gray-900">
+                  新建发布任务
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form id="publish-form" onSubmit={handleSubmit} className="space-y-6">
+                  
+                  <div className="space-y-2">
+                    <label htmlFor="title" className="text-sm font-medium leading-none">
+                      视频/图文标题 <span className="text-red-500">*</span>
+                    </label>
+                    <Input name="title" id="title" required placeholder="请输入引人注目的标题..." />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="description" className="text-sm font-medium leading-none">
+                      内容描述 <span className="text-red-500">*</span>
+                    </label>
+                    <Textarea name="description" id="description" required placeholder="请填写详细的内容描述..." className="min-h-[120px]" />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="tags" className="text-sm font-medium leading-none">
+                      标签 (Tags)
+                    </label>
+                    <Input name="tags" id="tags" placeholder="例如: 科技, 数码, 评测 (用逗号分隔)" />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium leading-none">
+                      上传媒体文件 <span className="text-red-500">*</span>
+                    </label>
+                    <div className="flex items-center justify-center w-full">
+                      {!selectedFile ? (
+                        <label htmlFor="dropzone-file" className="flex flex-col items-center justify-center w-full h-40 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                          <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                            <p className="mb-2 text-sm text-gray-500"><span className="font-semibold text-blue-600">点击上传</span> 或拖拽文件</p>
+                            <p className="text-xs text-gray-500">MP4, MOV, PNG, JPG (最大 2GB)</p>
+                          </div>
+                          <input name="file" id="dropzone-file" type="file" className="hidden" accept="video/mp4,video/quicktime,image/jpeg,image/png" required onChange={handleFileChange} />
+                        </label>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center w-full h-40 border-2 border-blue-300 border-solid rounded-lg bg-blue-50 relative">
+                          <button type="button" onClick={clearFile} className="absolute top-2 right-2 p-1 bg-white rounded-full text-gray-500 hover:text-red-500 shadow-sm" title="移除文件">
+                            <XIcon className="w-5 h-5" />
+                          </button>
+                          <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                            {getFileIcon()}
+                            <p className="mt-3 text-sm font-medium text-gray-900 truncate max-w-[250px]">{selectedFile.name}</p>
+                            <p className="text-xs text-gray-500 mt-1">{formatFileSize(selectedFile.size)}</p>
+                            <label htmlFor="dropzone-file" className="mt-4 text-xs font-semibold text-blue-600 cursor-pointer hover:underline">更换文件</label>
+                            <input name="file" id="dropzone-file" type="file" className="hidden" accept="video/mp4,video/quicktime,image/jpeg,image/png" onChange={handleFileChange} />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 pt-4 border-t">
+                    <label className="text-base font-semibold">选择分发平台 <span className="text-red-500">*</span></label>
+                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                      {Object.keys(platforms).map((key) => {
+                        const pid = key as keyof typeof platforms;
+                        return (
+                          <div key={pid} className="flex items-center space-x-2 bg-white p-3 rounded-md border shadow-sm">
+                            <Checkbox id={pid} disabled={!loginStatus[pid]} checked={platforms[pid]} onCheckedChange={() => handlePlatformChange(pid)} />
+                            <label htmlFor={pid} className={`text-sm font-medium leading-none ${!loginStatus[pid] ? 'text-gray-400 cursor-not-allowed' : 'cursor-pointer'}`}>
+                              {pid === 'douyin' ? '抖音' : pid === 'bilibili' ? 'B站' : pid === 'xiaohongshu' ? '小红书' : 'YouTube'}
+                            </label>
+                          </div>
+                        )
+                      })}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">提示：必须先在账号管理中登录，才能选择对应的平台。</p>
+                  </div>
+                </form>
+              </CardContent>
+              <CardFooter className="bg-gray-50 flex justify-end p-6 border-t rounded-b-lg">
+                <Button type="submit" form="publish-form" className="w-full sm:w-auto text-lg px-8 py-6" disabled={isSubmitting}>
+                  {isSubmitting ? "自动化发布中 (这可能需要几分钟)..." : "一键发布"}
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+        )}
+
+        {/* ==================== HISTORY TAB ==================== */}
+        {activeTab === 'history' && (
+          <div className="space-y-6">
+            {!selectedTask ? (
+              // Task List View
+              <div className="grid gap-4">
+                {tasks.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500 bg-white border rounded-lg">暂无发布历史记录</div>
+                ) : (
+                  tasks.map(task => (
+                    <Card key={task.id} className="hover:border-blue-300 transition-colors cursor-pointer" onClick={() => setSelectedTask(task)}>
+                      <CardHeader className="py-4">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <CardTitle className="text-lg">{task.title}</CardTitle>
+                            <CardDescription className="mt-1">{new Date(task.createdAt).toLocaleString()}</CardDescription>
+                          </div>
+                          <div className={`px-2.5 py-0.5 rounded-full text-xs font-semibold
+                            ${task.status === 'completed' ? 'bg-green-100 text-green-800' : 
+                              task.status === 'failed' ? 'bg-red-100 text-red-800' : 
+                              'bg-yellow-100 text-yellow-800'}`}
+                          >
+                            {task.status === 'completed' ? '已完成' : task.status === 'failed' ? '部分/全部失败' : '处理中'}
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="py-2 pb-4">
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {task.results?.map(res => (
+                            <span key={res.platform} className={`text-xs px-2 py-1 rounded-md border flex items-center space-x-1 ${res.success ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
+                              {res.success ? <CheckCircleIcon className="w-3 h-3 text-green-600" /> : <XCircleIcon className="w-3 h-3 text-red-600" />}
+                              <span>{res.platform}</span>
+                            </span>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </div>
+            ) : (
+              // Task Details View
+              <div className="space-y-6">
+                <Button variant="outline" onClick={() => setSelectedTask(null)} className="mb-4">
+                  ← 返回列表
+                </Button>
+                
+                <Card>
+                  <CardHeader className="bg-gray-50 border-b">
+                    <CardTitle className="text-xl">{selectedTask.title}</CardTitle>
+                    <CardDescription>{new Date(selectedTask.createdAt).toLocaleString()} • {selectedTask.platforms.join(', ')}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="divide-y">
+                      {selectedTask.results.map(res => (
+                        <div key={res.platform} className="p-6">
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold uppercase">{res.platform}</h3>
+                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${res.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                              {res.success ? '成功' : '失败'}
+                            </span>
+                          </div>
+                          
+                          <p className={`text-sm mb-6 p-3 rounded-md border ${res.success ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                            {res.message}
+                          </p>
+
+                          <div className="space-y-4">
+                            {/* Execution Logs */}
+                            {res.logs && res.logs.length > 0 && (
+                              <div className="bg-gray-900 rounded-md p-4 overflow-x-auto">
+                                <h4 className="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">执行日志</h4>
+                                <div className="font-mono text-xs text-gray-300 space-y-1">
+                                  {res.logs.map((log, i) => (
+                                    <div key={i}>{log}</div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Screenshots Carousel/Grid */}
+                            {res.screenshots && res.screenshots.length > 0 && (
+                              <div>
+                                <h4 className="text-sm font-semibold text-gray-700 mb-3 border-b pb-2">自动化调试截图 (Timeline)</h4>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                  {res.screenshots.map((src, i) => (
+                                    <div key={i} className="group relative rounded-lg overflow-hidden border bg-gray-100 aspect-video">
+                                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                                      <img src={src} alt={`Step ${i+1}`} className="object-cover w-full h-full" />
+                                      <div className="absolute inset-x-0 bottom-0 bg-black/60 text-white text-[10px] p-1 truncate">
+                                        Step {i+1}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             )}
-          </CardContent>
-          <CardFooter className="bg-gray-50 flex justify-end p-6 border-t rounded-b-lg">
-            <Button type="submit" form="publish-form" className="w-full sm:w-auto text-lg px-8 py-6" disabled={isSubmitting}>
-              {isSubmitting ? "正在自动化发布中 (这可能需要几分钟)..." : "一键发布"}
-            </Button>
-          </CardFooter>
-        </Card>
+          </div>
+        )}
       </div>
     </div>
   )

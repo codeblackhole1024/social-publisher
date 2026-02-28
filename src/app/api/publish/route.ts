@@ -3,9 +3,8 @@ import fs from 'fs';
 import path from 'path';
 import { chromium, type Browser } from 'playwright';
 import { uploadToDouyin } from '@/lib/publishers/douyin';
-// import { uploadToBilibili } from '@/lib/publishers/bilibili';
-// import { uploadToXiaohongshu } from '@/lib/publishers/xiaohongshu';
 import { uploadToYouTube } from '@/lib/publishers/youtube';
+import { saveTask, type PublishTask, type PublishResult } from '@/lib/db';
 
 const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
 const COOKIES_DIR = path.join(process.cwd(), 'src/lib/publishers/cookies');
@@ -23,21 +22,39 @@ export async function POST(req: Request) {
     const title = formData.get('title') as string;
     const description = formData.get('description') as string;
     const tags = formData.get('tags') as string;
-    const platforms = JSON.parse(formData.get('platforms') as string);
+    const platformsStr = formData.get('platforms') as string;
+    const platformsObj = JSON.parse(platformsStr);
     const file = formData.get('file') as File;
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
+    const selectedPlatformNames = Object.entries(platformsObj)
+      .filter(([_, isSelected]) => isSelected)
+      .map(([key]) => key);
+
+    // Create DB Task record immediately
+    const taskId = `task_${Date.now()}`;
+    const taskRecord: PublishTask = {
+      id: taskId,
+      title,
+      description,
+      tags,
+      platforms: selectedPlatformNames,
+      status: 'processing',
+      createdAt: new Date().toISOString(),
+      results: []
+    };
+    saveTask(taskRecord);
+
     const buffer = Buffer.from(await file.arrayBuffer());
     filePath = path.join(UPLOADS_DIR, `${Date.now()}-${file.name}`);
     fs.writeFileSync(filePath, buffer);
 
-    const results = [];
     const tagsArray = tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : [];
+    const results: PublishResult[] = [];
 
-    // Stealth parameters to avoid Douyin bot checks preventing the publish button from activating
     browser = await chromium.launch({ 
         headless: true,
         args: [
@@ -46,7 +63,7 @@ export async function POST(req: Request) {
         ]
     });
 
-    if (platforms.douyin) {
+    if (platformsObj.douyin) {
       try {
         const cookiePath = path.join(COOKIES_DIR, 'douyin.json');
         if (!fs.existsSync(cookiePath)) throw new Error('未找到抖音登录凭证');
@@ -61,11 +78,11 @@ export async function POST(req: Request) {
         results.push({ platform: 'douyin', ...result });
         await context.close();
       } catch (err: any) {
-        results.push({ platform: 'douyin', success: false, message: `自动化错误: ${err.message}` });
+        results.push({ platform: 'douyin', success: false, message: `自动化错误: ${err.message}`, logs: [err.message], screenshots: [] });
       }
     }
     
-    if (platforms.youtube) {
+    if (platformsObj.youtube) {
       try {
         const cookiePath = path.join(COOKIES_DIR, 'youtube.json');
         if (!fs.existsSync(cookiePath)) throw new Error('未找到YouTube登录凭证');
@@ -77,16 +94,16 @@ export async function POST(req: Request) {
         results.push({ platform: 'youtube', ...result });
         await context.close();
       } catch (err: any) {
-        results.push({ platform: 'youtube', success: false, message: `自动化错误: ${err.message}` });
+        results.push({ platform: 'youtube', success: false, message: `自动化错误: ${err.message}`, logs: [err.message], screenshots: [] });
       }
     }
 
-    if (platforms.bilibili) {
-      results.push({ platform: 'bilibili', success: false, message: 'Playwright逻辑待实现' });
+    if (platformsObj.bilibili) {
+      results.push({ platform: 'bilibili', success: false, message: 'Playwright逻辑待实现', logs: [], screenshots: [] });
     }
     
-    if (platforms.xiaohongshu) {
-      results.push({ platform: 'xiaohongshu', success: false, message: 'Playwright逻辑待实现' });
+    if (platformsObj.xiaohongshu) {
+      results.push({ platform: 'xiaohongshu', success: false, message: 'Playwright逻辑待实现', logs: [], screenshots: [] });
     }
 
     if (fs.existsSync(filePath)) {
@@ -94,7 +111,14 @@ export async function POST(req: Request) {
     }
 
     if (browser) await browser.close();
-    return NextResponse.json({ success: true, results });
+
+    // Update DB Task record as completed
+    const anyFailures = results.some(r => !r.success);
+    taskRecord.status = anyFailures && results.some(r => r.success) ? 'completed' : (anyFailures ? 'failed' : 'completed');
+    taskRecord.results = results;
+    saveTask(taskRecord);
+
+    return NextResponse.json({ success: true, results, task: taskRecord });
 
   } catch (error: any) {
     console.error('Publish error:', error);

@@ -165,3 +165,56 @@ Call log:
   42 |     
   43 |     // Safety check: Make sure we are not on login page
  POST /api/publish 200 in 30.4s (compile: 4ms, render: 30.4s)
+Starting Douyin upload for: test at 1772282003682
+Navigating to Douyin creator portal...
+Searching for file input...
+Uploading file: /Users/codeblackhole/opencode-ws/social-publisher/uploads/1772282003221-naruto-1_no_watermark.mp4
+Waiting for video upload to complete...
+Filling description and tags...
+Publishing...
+Waiting for success confirmation...
+ POST /api/publish 200 in 51s (compile: 54ms, render: 51s)
+ GET / 200 in 62ms (compile: 7ms, render: 55ms)
+ GET /api/auth/status 200 in 13ms (compile: 3ms, render: 10ms)
+ GET / 200 in 38ms (compile: 6ms, render: 32ms)
+Starting login for bilibili...
+Please login manually in the opened browser window.
+Waiting for user to log into bilibili (timeout: 3 minutes)...
+Timeout assuming manual close
+Successfully saved session for bilibili to /Users/codeblackhole/opencode-ws/social-publisher/src/lib/publishers/cookies/bilibili.json
+ GET /api/auth/status 200 in 9ms (compile: 3ms, render: 6ms)
+ GET / 200 in 42ms (compile: 3ms, render: 39ms)
+ GET /api/auth/status 200 in 11ms (compile: 3ms, render: 8ms)
+ GET / 200 in 104ms (compile: 8ms, render: 95ms)
+ GET / 200 in 103ms (compile: 15ms, render: 88ms)
+ GET / 200 in 114ms (compile: 1874µs, render: 112ms)
+ GET / 200 in 114ms (compile: 10ms, render: 104ms)
+ GET / 200 in 115ms (compile: 39ms, render: 76ms)
+ GET / 200 in 115ms (compile: 51ms, render: 64ms)
+ GET / 200 in 74ms (compile: 4ms, render: 70ms)
+ GET / 200 in 73ms (compile: 14ms, render: 59ms)
+ GET / 200 in 50ms (compile: 7ms, render: 42ms)
+ GET / 200 in 50ms (compile: 1476µs, render: 49ms)
+ GET / 200 in 50ms (compile: 946µs, render: 49ms)
+ GET / 200 in 52ms (compile: 8ms, render: 44ms)
+ GET / 200 in 52ms (compile: 976µs, render: 51ms)
+ GET / 200 in 53ms (compile: 7ms, render: 46ms)
+ GET / 200 in 53ms (compile: 1596µs, render: 51ms)
+ GET / 200 in 59ms (compile: 8ms, render: 51ms)
+ GET / 200 in 56ms (compile: 1017µs, render: 55ms)
+ GET / 200 in 56ms (compile: 3ms, render: 54ms)
+ GET / 200 in 54ms (compile: 1401µs, render: 53ms)
+ GET / 200 in 54ms (compile: 3ms, render: 52ms)
+ GET / 200 in 53ms (compile: 1198µs, render: 52ms)
+ GET / 200 in 59ms (compile: 8ms, render: 52ms)
+ GET / 200 in 47ms (compile: 1082µs, render: 46ms)
+ GET / 200 in 38ms (compile: 3ms, render: 36ms)
+ GET / 200 in 32ms (compile: 963µs, render: 31ms)
+ GET / 200 in 32ms (compile: 7ms, render: 25ms)
+ GET / 200 in 19ms (compile: 1235µs, render: 18ms)
+ GET / 200 in 13ms (compile: 2ms, render: 11ms)
+ GET /api/auth/status 200 in 29ms (compile: 25ms, render: 3ms)
+ GET /api/auth/status 200 in 2ms (compile: 753µs, render: 1721µs)
+✓ Compiled in 32ms
+ GET /api/tasks 200 in 51ms (compile: 49ms, render: 1685µs)
+ GET /api/tasks 200 in 53ms (compile: 53ms, render: 849µs)
