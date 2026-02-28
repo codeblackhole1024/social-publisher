@@ -1,36 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Social Publisher
+
+An open-source automation tool for distributing content across multiple social media platforms simultaneously.
+
+## Features
+
+- **Multi-Platform Support**: Post content to Douyin, Bilibili, Xiaohongshu, and YouTube from a single interface.
+- **Unified UI**: Simple web interface built with Next.js, Tailwind CSS, and Shadcn/UI.
+- **Automation Strategies**:
+  - **YouTube**: Integrated via Rube MCP (`youtube-automation` skill).
+  - **Douyin/Bilibili/Xiaohongshu**: Integrated via Playwright browser automation (simulating human uploading behavior).
+
+## Prerequisites
+
+- Node.js 18.x or later
+- npm or pnpm
+- Playwright browsers installed (`npx playwright install`)
 
 ## Getting Started
 
-First, run the development server:
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Run the development server:
+   ```bash
+   npm run dev
+   ```
+4. Open [http://localhost:3000](http://localhost:3000) with your browser to see the application.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Project Structure
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- `/src/app/page.tsx`: Main UI component containing the unified publishing form.
+- `/src/app/api/publish/route.ts`: Backend API route that orchestrates the upload tasks.
+- `/src/lib/publishers/`: Contains the specific upload implementations for each platform.
+  - `douyin.ts`: Playwright logic for Douyin.
+  - `bilibili.ts`: Playwright logic for Bilibili.
+  - `xiaohongshu.ts`: Playwright logic for Xiaohongshu.
+  - `youtube.ts`: Composio MCP integration logic for YouTube.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Note on Chinese Platforms
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Because Douyin, Xiaohongshu, and Bilibili generally restrict public API access for content creation to verified enterprise users, this tool relies on **Browser Automation (Playwright)**. 
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+To use this in production:
+1. You will need to implement a cookie management system (e.g., logging in manually once, saving the `storage_state`, and reusing it for headless automation).
+2. DOM selectors for these platforms change frequently. You must inspect and update the selectors in the `src/lib/publishers/` files accordingly.
