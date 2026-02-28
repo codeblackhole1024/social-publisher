@@ -5,12 +5,11 @@ import { chromium, type Browser } from 'playwright';
 import { uploadToDouyin } from '@/lib/publishers/douyin';
 // import { uploadToBilibili } from '@/lib/publishers/bilibili';
 // import { uploadToXiaohongshu } from '@/lib/publishers/xiaohongshu';
-// import { uploadToYouTube } from '@/lib/publishers/youtube';
+import { uploadToYouTube } from '@/lib/publishers/youtube';
 
 const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
 const COOKIES_DIR = path.join(process.cwd(), 'src/lib/publishers/cookies');
 
-// Ensure uploads directory exists
 if (!fs.existsSync(UPLOADS_DIR)) {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 }
@@ -39,10 +38,9 @@ export async function POST(req: Request) {
     const results = [];
     const tagsArray = tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : [];
 
-    // Launch a headless browser session to be shared (different contexts)
     browser = await chromium.launch({ headless: true });
 
-    // Execute platforms sequentially to avoid blocking or memory overload
+    // Execute platforms
     if (platforms.douyin) {
       try {
         const cookiePath = path.join(COOKIES_DIR, 'douyin.json');
@@ -59,7 +57,22 @@ export async function POST(req: Request) {
       }
     }
     
-    // Add other platforms similarly (Bilibili, Xiaohongshu)...
+    if (platforms.youtube) {
+      try {
+        const cookiePath = path.join(COOKIES_DIR, 'youtube.json');
+        if (!fs.existsSync(cookiePath)) throw new Error('未找到YouTube登录凭证');
+        
+        const context = await browser.newContext({ storageState: cookiePath });
+        const page = await context.newPage();
+        
+        const result = await uploadToYouTube(page, filePath, title, description, tagsArray);
+        results.push({ platform: 'youtube', ...result });
+        await context.close();
+      } catch (err: any) {
+        results.push({ platform: 'youtube', success: false, message: `自动化错误: ${err.message}` });
+      }
+    }
+
     if (platforms.bilibili) {
       results.push({ platform: 'bilibili', success: false, message: 'Playwright逻辑待实现' });
     }
@@ -67,12 +80,7 @@ export async function POST(req: Request) {
     if (platforms.xiaohongshu) {
       results.push({ platform: 'xiaohongshu', success: false, message: 'Playwright逻辑待实现' });
     }
-    
-    if (platforms.youtube) {
-      results.push({ platform: 'youtube', success: false, message: 'Composio逻辑待接通' });
-    }
 
-    // Clean up temporary file
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }

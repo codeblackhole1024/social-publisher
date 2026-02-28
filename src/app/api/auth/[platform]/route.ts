@@ -7,12 +7,12 @@ export async function POST(
 ) {
   const { platform } = await params;
   
-  if (!['douyin', 'bilibili', 'xiaohongshu'].includes(platform)) {
+  if (!['douyin', 'bilibili', 'xiaohongshu', 'youtube'].includes(platform)) {
     return NextResponse.json({ error: 'Invalid platform' }, { status: 400 });
   }
 
   try {
-    const result = await loginToPlatform(platform as Exclude<Platform, 'youtube'>);
+    const result = await loginToPlatform(platform as Platform);
     
     if (result.success) {
       return NextResponse.json({ success: true, message: result.message });
@@ -31,10 +31,10 @@ export async function GET(
 ) {
   const { platform } = await params;
   
-  if (!['douyin', 'bilibili', 'xiaohongshu'].includes(platform)) {
+  if (!['douyin', 'bilibili', 'xiaohongshu', 'youtube'].includes(platform)) {
     return NextResponse.json({ error: 'Invalid platform' }, { status: 400 });
   }
 
-  const isLoggedIn = checkLoginStatus(platform as Exclude<Platform, 'youtube'>);
+  const isLoggedIn = checkLoginStatus(platform as Platform);
   return NextResponse.json({ isLoggedIn });
 }

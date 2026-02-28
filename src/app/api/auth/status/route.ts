@@ -6,7 +6,7 @@ export async function GET() {
     douyin: checkLoginStatus('douyin'),
     bilibili: checkLoginStatus('bilibili'),
     xiaohongshu: checkLoginStatus('xiaohongshu'),
-    youtube: true, // YouTube is managed via Composio
+    youtube: checkLoginStatus('youtube'),
   };
 
   return NextResponse.json(status);
