@@ -34,7 +34,6 @@ export async function POST(req: Request) {
       .filter(([_, isSelected]) => isSelected)
       .map(([key]) => key);
 
-    // Create DB Task record immediately
     const taskId = `task_${Date.now()}`;
     const taskRecord: PublishTask = {
       id: taskId,
@@ -47,7 +46,6 @@ export async function POST(req: Request) {
       results: []
     };
     
-    // Await the save because Supabase is async now
     await saveTask(taskRecord);
 
     const buffer = Buffer.from(await file.arrayBuffer());
@@ -57,77 +55,87 @@ export async function POST(req: Request) {
     const tagsArray = tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : [];
     const results: PublishResult[] = [];
 
-    browser = await chromium.launch({ 
-        headless: true,
-        args: [
-            '--disable-blink-features=AutomationControlled',
-            '--disable-web-security'
-        ]
-    });
-
-    if (platformsObj.douyin) {
+    // Respond immediately with taskId to the frontend so it can start polling!
+    // DO NOT await the headless execution before responding.
+    // The headless execution must run asynchronously in the background.
+    
+    // Create an async worker function
+    const runPublishing = async () => {
       try {
-        const cookiePath = path.join(COOKIES_DIR, 'douyin.json');
-        if (!fs.existsSync(cookiePath)) throw new Error('未找到抖音登录凭证');
-        
-        const context = await browser.newContext({ 
-            storageState: cookiePath,
-            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+        browser = await chromium.launch({ 
+            headless: true,
+            args: [
+                '--disable-blink-features=AutomationControlled',
+                '--disable-web-security'
+            ]
         });
-        const page = await context.newPage();
+
+        if (platformsObj.douyin) {
+          try {
+            const cookiePath = path.join(COOKIES_DIR, 'douyin.json');
+            if (!fs.existsSync(cookiePath)) throw new Error('未找到抖音登录凭证');
+            
+            const context = await browser.newContext({ 
+                storageState: cookiePath,
+                userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+            });
+            const page = await context.newPage();
+            
+            // Pass taskId to Douyin so it can suspend and poll DB if needed
+            const result = await uploadToDouyin(taskId, page, filePath, title, description, tagsArray);
+            results.push({ platform: 'douyin', ...result });
+            await context.close();
+          } catch (err: any) {
+            results.push({ platform: 'douyin', success: false, message: `自动化错误: ${err.message}`, logs: [err.message], screenshots: [] });
+          }
+        }
         
-        const result = await uploadToDouyin(page, filePath, title, description, tagsArray);
-        results.push({ platform: 'douyin', ...result });
-        await context.close();
-      } catch (err: any) {
-        results.push({ platform: 'douyin', success: false, message: `自动化错误: ${err.message}`, logs: [err.message], screenshots: [] });
+        if (platformsObj.youtube) {
+          try {
+            const cookiePath = path.join(COOKIES_DIR, 'youtube.json');
+            if (!fs.existsSync(cookiePath)) throw new Error('未找到YouTube登录凭证');
+            
+            const context = await browser.newContext({ storageState: cookiePath });
+            const page = await context.newPage();
+            
+            const result = await uploadToYouTube(page, filePath, title, description, tagsArray);
+            results.push({ platform: 'youtube', ...result });
+            await context.close();
+          } catch (err: any) {
+            results.push({ platform: 'youtube', success: false, message: `自动化错误: ${err.message}`, logs: [err.message], screenshots: [] });
+          }
+        }
+
+        if (platformsObj.bilibili) {
+          results.push({ platform: 'bilibili', success: false, message: 'Playwright逻辑待实现', logs: [], screenshots: [] });
+        }
+        
+        if (platformsObj.xiaohongshu) {
+          results.push({ platform: 'xiaohongshu', success: false, message: 'Playwright逻辑待实现', logs: [], screenshots: [] });
+        }
+
+      } finally {
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        if (browser) await browser.close();
+
+        // Update DB Task record as completed
+        const anyFailures = results.some(r => !r.success);
+        taskRecord.status = anyFailures && results.some(r => r.success) ? 'completed' : (anyFailures ? 'failed' : 'completed');
+        taskRecord.results = results;
+        taskRecord.requiresVerification = false; // clear state
+        await saveTask(taskRecord);
       }
-    }
-    
-    if (platformsObj.youtube) {
-      try {
-        const cookiePath = path.join(COOKIES_DIR, 'youtube.json');
-        if (!fs.existsSync(cookiePath)) throw new Error('未找到YouTube登录凭证');
-        
-        const context = await browser.newContext({ storageState: cookiePath });
-        const page = await context.newPage();
-        
-        const result = await uploadToYouTube(page, filePath, title, description, tagsArray);
-        results.push({ platform: 'youtube', ...result });
-        await context.close();
-      } catch (err: any) {
-        results.push({ platform: 'youtube', success: false, message: `自动化错误: ${err.message}`, logs: [err.message], screenshots: [] });
-      }
-    }
+    };
 
-    if (platformsObj.bilibili) {
-      results.push({ platform: 'bilibili', success: false, message: 'Playwright逻辑待实现', logs: [], screenshots: [] });
-    }
-    
-    if (platformsObj.xiaohongshu) {
-      results.push({ platform: 'xiaohongshu', success: false, message: 'Playwright逻辑待实现', logs: [], screenshots: [] });
-    }
+    // Fire and forget the background worker
+    runPublishing();
 
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
-
-    if (browser) await browser.close();
-
-    // Update DB Task record as completed
-    const anyFailures = results.some(r => !r.success);
-    taskRecord.status = anyFailures && results.some(r => r.success) ? 'completed' : (anyFailures ? 'failed' : 'completed');
-    taskRecord.results = results;
-    
-    // Await the update
-    await saveTask(taskRecord);
-
-    return NextResponse.json({ success: true, results, task: taskRecord });
+    // Immediately return the task ID so the UI can start polling /api/tasks/[id]/verify
+    return NextResponse.json({ success: true, taskId });
 
   } catch (error: any) {
-    console.error('Publish error:', error);
-    if (browser) await browser.close().catch(() => {});
+    console.error('Publish setup error:', error);
     if (filePath && fs.existsSync(filePath)) fs.unlinkSync(filePath);
-    return NextResponse.json({ error: `发布过程发生错误: ${error.message}` }, { status: 500 });
+    return NextResponse.json({ error: `发布初始化发生错误: ${error.message}` }, { status: 500 });
   }
 }

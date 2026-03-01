@@ -14,16 +14,20 @@ export interface PublishTask {
   description: string;
   tags: string;
   platforms: string[];
-  status: 'pending' | 'processing' | 'completed' | 'failed';
+  status: 'pending' | 'processing' | 'requires_verification' | 'completed' | 'failed';
   createdAt: string; // ISO string
   results: PublishResult[];
+  // Interactive Verification Fields
+  requiresVerification?: boolean;
+  verificationPlatform?: string | null;
+  verificationCode?: string | null;
 }
 
 export interface SocialPlatform {
-  id: string; // e.g., 'douyin', 'bilibili'
-  name: string; // e.g., '抖音', 'B站'
+  id: string;
+  name: string;
   isConnected: boolean;
-  lastLoginAt: string | null; // ISO Date String
+  lastLoginAt: string | null; 
 }
 
 // ----------------------------------------------------
@@ -46,11 +50,9 @@ export async function getPlatforms(): Promise<SocialPlatform[]> {
           { id: 'youtube', name: 'YouTube', isConnected: false, lastLoginAt: null },
         ];
       }
-      console.error('Supabase error fetching platforms:', error);
       return [];
     }
 
-    // If table is empty, initialize defaults
     if (!data || data.length === 0) {
       const defaultPlatforms = [
         { id: 'douyin', name: '抖音', isConnected: false, lastLoginAt: null },
@@ -78,14 +80,6 @@ export async function updatePlatformLoginStatus(platformId: string, isConnected:
         lastLoginAt: isConnected ? new Date().toISOString() : null,
       })
       .eq('id', platformId);
-
-    if (error) {
-      if (error.code === '42P01') {
-         console.warn('Table "platforms" does not exist yet. Please create it with columns: id(text, PK), name(text), isConnected(boolean), lastLoginAt(text).');
-      } else {
-         console.error('Supabase error updating platform login status:', error);
-      }
-    }
   } catch (err) {
     console.error('Error updating platform login to Supabase:', err);
   }
@@ -95,6 +89,21 @@ export async function updatePlatformLoginStatus(platformId: string, isConnected:
 // Task Operations
 // ----------------------------------------------------
 
+export async function getTask(id: string): Promise<PublishTask | null> {
+  try {
+    const { data, error } = await supabase
+      .from('tasks')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error || !data) return null;
+    return data as PublishTask;
+  } catch (err) {
+    return null;
+  }
+}
+
 export async function getTasks(): Promise<PublishTask[]> {
   try {
     const { data, error } = await supabase
@@ -103,16 +112,10 @@ export async function getTasks(): Promise<PublishTask[]> {
       .order('createdAt', { ascending: false });
 
     if (error) {
-      console.error('Supabase error fetching tasks:', error);
-      if (error.code === '42P01') {
-        console.warn('Table "tasks" does not exist yet. Please create it in Supabase dashboard.');
-      }
       return [];
     }
-
     return (data || []) as PublishTask[];
   } catch (err) {
-    console.error('Error reading tasks from Supabase:', err);
     return [];
   }
 }
@@ -129,12 +132,11 @@ export async function saveTask(task: PublishTask) {
         platforms: task.platforms,
         status: task.status,
         createdAt: task.createdAt,
-        results: task.results
+        results: task.results,
+        requiresVerification: task.requiresVerification || false,
+        verificationPlatform: task.verificationPlatform || null,
+        verificationCode: task.verificationCode || null
       });
-
-    if (error) {
-      console.error('Supabase error saving task:', error);
-    }
   } catch (err) {
     console.error('Error writing task to Supabase:', err);
   }
@@ -150,12 +152,10 @@ export async function updateTask(id: string, updates: Partial<PublishTask>) {
       .single();
 
     if (error) {
-      console.error('Supabase error updating task:', error);
       return null;
     }
     return data as PublishTask;
   } catch (err) {
-    console.error('Error updating task in Supabase:', err);
     return null;
   }
 }

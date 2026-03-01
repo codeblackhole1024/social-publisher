@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
-import { FileIcon, ImageIcon, VideoIcon, XIcon, CheckCircleIcon, XCircleIcon } from "lucide-react"
+import { FileIcon, ImageIcon, VideoIcon, XIcon, CheckCircleIcon, XCircleIcon, Loader2Icon } from "lucide-react"
 import { PublishTask, SocialPlatform } from "@/lib/db"
 
 export default function Home() {
@@ -16,19 +16,55 @@ export default function Home() {
   const [isLoggingIn, setIsLoggingIn] = useState<string | null>(null)
   
   const [dbPlatforms, setDbPlatforms] = useState<SocialPlatform[]>([])
-  
-  // Map of selected platforms for the publishing form
   const [platforms, setPlatforms] = useState<Record<string, boolean>>({})
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+
+  // Polling State for Interactive Verification
+  const [pollingTaskId, setPollingTaskId] = useState<string | null>(null)
+  const [verifPlatform, setVerifPlatform] = useState<string | null>(null)
+  const [verifCodeInput, setVerifCodeInput] = useState('')
 
   // History State
   const [tasks, setTasks] = useState<PublishTask[]>([])
   const [selectedTask, setSelectedTask] = useState<PublishTask | null>(null)
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
   useEffect(() => {
     fetchLoginStatus()
     fetchTasks()
   }, [])
+
+  // Poll Task Status if we have a pollingTaskId
+  useEffect(() => {
+    if (!pollingTaskId) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/tasks/${pollingTaskId}/verify`);
+        if (res.ok) {
+          const task: PublishTask = await res.json();
+          
+          if (task.status === 'requires_verification') {
+             // Stop UI loading and show verification modal
+             setIsSubmitting(false);
+             setVerifPlatform(task.verificationPlatform || '未知平台');
+          } else if (task.status === 'completed' || task.status === 'failed') {
+             // Done! Stop polling and navigate to results
+             clearInterval(interval);
+             setPollingTaskId(null);
+             setIsSubmitting(false);
+             setVerifPlatform(null);
+             await fetchTasks();
+             setSelectedTask(task);
+             setActiveTab('history');
+          }
+        }
+      } catch (err) {
+        console.error("Polling error", err);
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [pollingTaskId]);
 
   const fetchLoginStatus = async () => {
     try {
@@ -36,8 +72,6 @@ export default function Home() {
       const data: SocialPlatform[] = await res.json()
       if (Array.isArray(data)) {
         setDbPlatforms(data)
-        
-        // Initialize local checkboxes state based on db data
         setPlatforms(prev => {
           const newState = { ...prev }
           data.forEach(p => {
@@ -46,9 +80,7 @@ export default function Home() {
           return newState;
         })
       }
-    } catch (e) {
-      console.error('Failed to fetch platform status')
-    }
+    } catch (e) {}
   }
 
   const fetchTasks = async () => {
@@ -56,9 +88,7 @@ export default function Home() {
       const res = await fetch('/api/tasks')
       const data = await res.json()
       setTasks(data)
-    } catch (e) {
-      console.error('Failed to fetch tasks')
-    }
+    } catch (e) {}
   }
 
   const handleLogin = async (platformId: string) => {
@@ -72,9 +102,7 @@ export default function Home() {
       } else {
         alert('登录失败，请重试')
       }
-    } catch (e) {
-      alert('网络错误，无法启动登录进程')
-    } finally {
+    } catch (e) {} finally {
       setIsLoggingIn(null)
     }
   }
@@ -133,18 +161,36 @@ export default function Home() {
       })
 
       const data = await response.json()
-      if (data.task) {
-        await fetchTasks()
-        setSelectedTask(data.task)
-        setActiveTab('history')
+      if (data.taskId) {
+        // Start polling!
+        setPollingTaskId(data.taskId);
       } else {
-        alert(data.error || '发布失败')
+        alert(data.error || '发布请求失败')
+        setIsSubmitting(false)
       }
     } catch (error) {
-      console.error('Publishing failed', error)
       alert('发布请求发送失败，请检查网络。')
-    } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const submitVerificationCode = async () => {
+    if (!verifCodeInput) return;
+    try {
+      // Put UI back into loading state while Playwright consumes the code
+      setIsSubmitting(true); 
+      setVerifPlatform(null);
+      
+      await fetch(`/api/tasks/${pollingTaskId}/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: verifCodeInput })
+      });
+      setVerifCodeInput('');
+    } catch (e) {
+      alert('提交验证码失败');
+      setIsSubmitting(false);
+      setVerifPlatform('douyin'); // Revert modal state
     }
   }
 
@@ -165,6 +211,51 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
+      {/* VERIFICATION MODAL OVERLAY */}
+      {verifPlatform && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <Card className="w-full max-w-md shadow-2xl animate-in fade-in zoom-in duration-200">
+            <CardHeader className="bg-red-50 border-b border-red-100 rounded-t-lg">
+              <CardTitle className="text-xl text-red-700 flex items-center gap-2">
+                需要安全验证 ({verifPlatform})
+              </CardTitle>
+              <CardDescription className="text-red-600 font-medium">
+                系统检测到平台发送了手机短信验证码。请输入收到的验证码以继续自动化发布流程。
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6 space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">短信验证码</label>
+                <Input 
+                  autoFocus
+                  placeholder="例如: 123456" 
+                  value={verifCodeInput}
+                  onChange={(e) => setVerifCodeInput(e.target.value)}
+                  className="text-lg tracking-widest text-center"
+                />
+              </div>
+            </CardContent>
+            <CardFooter className="flex justify-end gap-2 border-t pt-4">
+              <Button variant="outline" onClick={() => {
+                setVerifPlatform(null);
+                setPollingTaskId(null); // Abort polling
+              }}>放弃发布</Button>
+              <Button onClick={submitVerificationCode} className="bg-red-600 hover:bg-red-700">提交并继续</Button>
+            </CardFooter>
+          </Card>
+        </div>
+      )}
+
+      {/* FULL SCREEN LOADER */}
+      {isSubmitting && (
+        <div className="fixed inset-0 z-40 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center p-4">
+          <Loader2Icon className="w-12 h-12 text-blue-600 animate-spin mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">自动化发布进行中</h2>
+          <p className="text-gray-500 max-w-md text-center">系统正在后台操控无头浏览器进行页面上传，这可能需要1~3分钟时间，请勿关闭页面。如果触发验证码将在此页面提示。</p>
+        </div>
+      )}
+
+      {/* Top Navigation */}
       <div className="bg-white border-b shadow-sm sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-center space-x-8">
@@ -196,6 +287,7 @@ export default function Home() {
         {/* ==================== PUBLISH TAB ==================== */}
         {activeTab === 'publish' && (
           <div className="space-y-8">
+            {/* Account Management Section */}
             <Card className="w-full">
               <CardHeader>
                 <CardTitle className="text-2xl font-bold text-gray-900">账号管理</CardTitle>
@@ -307,13 +399,13 @@ export default function Home() {
                         </div>
                       ))}
                     </div>
-                    <p className="text-xs text-gray-500 mt-2">提示：由数据库动态提供支持平台。必须先在账号管理中登录，才能选择对应的平台。</p>
+                    <p className="text-xs text-gray-500 mt-2">提示：必须先在账号管理中登录，才能选择对应的平台。</p>
                   </div>
                 </form>
               </CardContent>
               <CardFooter className="bg-gray-50 flex justify-end p-6 border-t rounded-b-lg">
-                <Button type="submit" form="publish-form" className="w-full sm:w-auto text-lg px-8 py-6" disabled={isSubmitting}>
-                  {isSubmitting ? "自动化发布中 (这可能需要几分钟)..." : "一键发布"}
+                <Button type="submit" form="publish-form" className="w-full sm:w-auto text-lg px-8 py-6">
+                  一键发布
                 </Button>
               </CardFooter>
             </Card>

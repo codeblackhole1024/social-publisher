@@ -5,274 +5,66 @@
 ▲ Next.js 16.1.6 (Turbopack)
 - Local:         http://localhost:3000
 - Network:       http://10.242.205.177:3000
+- Environments: .env.local
 
 ✓ Starting...
-✓ Ready in 392ms
- GET / 200 in 277ms (compile: 183ms, render: 94ms)
- GET / 200 in 53ms (compile: 4ms, render: 49ms)
- GET / 200 in 111ms (compile: 26ms, render: 85ms)
- GET / 200 in 114ms (compile: 50ms, render: 63ms)
- GET / 200 in 73ms (compile: 1109µs, render: 72ms)
- GET / 200 in 84ms (compile: 12ms, render: 72ms)
- GET / 200 in 85ms (compile: 1511µs, render: 83ms)
- GET / 200 in 95ms (compile: 12ms, render: 82ms)
- GET / 200 in 81ms (compile: 6ms, render: 74ms)
- GET / 200 in 87ms (compile: 11ms, render: 76ms)
- GET / 200 in 80ms (compile: 4ms, render: 77ms)
- GET / 200 in 89ms (compile: 12ms, render: 77ms)
- GET / 200 in 84ms (compile: 1443µs, render: 82ms)
- GET / 200 in 91ms (compile: 11ms, render: 79ms)
- GET / 200 in 91ms (compile: 1581µs, render: 89ms)
- GET / 200 in 100ms (compile: 12ms, render: 88ms)
- GET / 200 in 81ms (compile: 3ms, render: 78ms)
- GET / 200 in 70ms (compile: 3ms, render: 67ms)
- GET / 200 in 58ms (compile: 2ms, render: 56ms)
- GET / 200 in 44ms (compile: 9ms, render: 35ms)
- GET / 200 in 28ms (compile: 2ms, render: 26ms)
- GET / 200 in 16ms (compile: 3ms, render: 13ms)
- GET / 200 in 114ms (compile: 25ms, render: 89ms)
- GET / 200 in 116ms (compile: 37ms, render: 79ms)
- GET / 200 in 84ms (compile: 9ms, render: 75ms)
- GET / 200 in 85ms (compile: 1449µs, render: 84ms)
- GET / 200 in 85ms (compile: 10ms, render: 75ms)
- GET / 200 in 85ms (compile: 1573µs, render: 84ms)
- GET / 200 in 94ms (compile: 1940µs, render: 93ms)
- GET / 200 in 97ms (compile: 13ms, render: 84ms)
- GET / 200 in 95ms (compile: 2ms, render: 93ms)
- GET / 200 in 104ms (compile: 10ms, render: 93ms)
- GET / 200 in 98ms (compile: 3ms, render: 95ms)
- GET / 200 in 109ms (compile: 10ms, render: 99ms)
- GET / 200 in 105ms (compile: 1982µs, render: 103ms)
- GET / 200 in 101ms (compile: 4ms, render: 98ms)
- GET / 200 in 94ms (compile: 3ms, render: 90ms)
- GET / 200 in 83ms (compile: 1983µs, render: 81ms)
- GET / 200 in 83ms (compile: 11ms, render: 72ms)
- GET / 200 in 78ms (compile: 1433µs, render: 77ms)
- GET / 200 in 66ms (compile: 4ms, render: 61ms)
- GET / 200 in 53ms (compile: 2ms, render: 51ms)
- GET / 200 in 44ms (compile: 3ms, render: 41ms)
- GET / 200 in 34ms (compile: 1957µs, render: 32ms)
- GET / 200 in 24ms (compile: 3ms, render: 21ms)
- GET / 200 in 14ms (compile: 1286µs, render: 12ms)
-✓ Compiled in 27ms
- GET /api/auth/status 200 in 693ms (compile: 671ms, render: 22ms)
- GET /api/auth/status 200 in 705ms (compile: 699ms, render: 6ms)
- GET / 200 in 112ms (compile: 53ms, render: 59ms)
- GET /api/auth/status 200 in 9ms (compile: 3ms, render: 6ms)
-Starting login for douyin...
-Please login manually in the opened browser window.
-Waiting for user to log into douyin (timeout: 3 minutes)...
-Successfully saved session for douyin to /Users/codeblackhole/opencode-ws/social-publisher/src/lib/publishers/cookies/douyin.json
-✓ Compiled in 16ms
- POST /api/auth/douyin 200 in 27.9s (compile: 661ms, render: 27.2s)
- GET /api/auth/status 200 in 8ms (compile: 4ms, render: 5ms)
- GET / 200 in 42ms (compile: 7ms, render: 35ms)
- GET /api/auth/status 200 in 9ms (compile: 2ms, render: 6ms)
- GET /api/auth/status 200 in 4ms (compile: 1330µs, render: 3ms)
- GET /api/auth/status 200 in 9ms (compile: 3ms, render: 6ms)
-✓ Compiled in 22ms
- GET / 200 in 107ms (compile: 55ms, render: 52ms)
- GET /api/auth/status 200 in 9ms (compile: 3ms, render: 6ms)
-Starting Douyin upload for: test
-Uploading file: /Users/codeblackhole/opencode-ws/social-publisher/uploads/1772279661194-naruto-1_no_watermark.mp4
-Waiting for video upload to complete...
-Filling description and tags...
-Publishing...
-Waiting for success confirmation...
- GET /api/auth/status 200 in 10ms (compile: 4ms, render: 7ms)
- GET /api/auth/status 200 in 15ms (compile: 1795µs, render: 13ms)
-✓ Compiled in 53ms
- POST /api/publish 200 in 44s (compile: 72ms, render: 43s)
-Starting Douyin upload for: test
-Uploading file: /Users/codeblackhole/opencode-ws/social-publisher/uploads/1772279761442-naruto-1_no_watermark.mp4
-Waiting for video upload to complete...
-Filling description and tags...
-Publishing...
-Waiting for success confirmation...
- POST /api/publish 200 in 42s (compile: 3ms, render: 42s)
- GET / 200 in 100ms (compile: 46ms, render: 53ms)
- GET /api/auth/status 200 in 48ms (compile: 42ms, render: 6ms)
-Starting Douyin upload for: test
-Uploading file: /Users/codeblackhole/opencode-ws/social-publisher/uploads/1772280041713-naruto-1_no_watermark.mp4
-Waiting for video upload to complete...
-Filling description and tags...
-Publishing...
-Waiting for success confirmation...
- POST /api/publish 200 in 37.4s (compile: 48ms, render: 37.3s)
-Starting Douyin upload for: test at 1772280449265
-Uploading file: /Users/codeblackhole/opencode-ws/social-publisher/uploads/1772280448703-naruto-1_no_watermark.mp4
-Waiting for video upload to complete...
-Timeout waiting for text indicators. Proceeding to check description form.
-Douyin upload failed: Error [TimeoutError]: page.screenshot: Timeout 30000ms exceeded.
-Call log:
-[2m  - taking page screenshot[22m
-[2m  - waiting for fonts to load...[22m
-
-    at uploadToDouyin (src/lib/publishers/douyin.ts:61:16)
-    at async POST (src/app/api/publish/route.ts:60:24)
-  59 |     }
-  60 |     
-> 61 |     await page.screenshot({ path: path.join(DEBUG_DIR, `douyin_${timestamp}_4_upload_complete.png`) });
-     |                ^
-  62 |     await page.waitForTimeout(3000); // UI stabilization
-  63 |
-  64 |     // 4. Fill in title & description
- POST /api/publish 200 in 68s (compile: 61ms, render: 68s)
- GET / 200 in 51ms (compile: 7ms, render: 44ms)
- GET /api/auth/status 200 in 11ms (compile: 3ms, render: 8ms)
-Starting Douyin upload for: test at 1772280916435
-Douyin upload failed: Error [TimeoutError]: page.goto: Timeout 30000ms exceeded.
-Call log:
-[2m  - navigating to "https://creator.douyin.com/creator-micro/content/upload", waiting until "domcontentloaded"[22m
-
-    at uploadToDouyin (src/lib/publishers/douyin.ts:40:16)
-    at async POST (src/app/api/publish/route.ts:60:24)
-  38 |     
-  39 |     // 1. Navigate to the creator portal upload page
-> 40 |     await page.goto('https://creator.douyin.com/creator-micro/content/upload', { waitUntil: 'domcontentloaded' });
-     |                ^
-  41 |     await safeScreenshot(page, `douyin_${timestamp}_1_initial.png`);
-  42 |     
-  43 |     // Safety check: Make sure we are not on login page
- POST /api/publish 200 in 30.7s (compile: 48ms, render: 30.7s)
-Starting Douyin upload for: test at 1772281444720
-Douyin upload failed: Error [TimeoutError]: page.goto: Timeout 30000ms exceeded.
-Call log:
-[2m  - navigating to "https://creator.douyin.com/creator-micro/content/upload", waiting until "domcontentloaded"[22m
-
-    at uploadToDouyin (src/lib/publishers/douyin.ts:40:16)
-    at async POST (src/app/api/publish/route.ts:60:24)
-  38 |     
-  39 |     // 1. Navigate to the creator portal upload page
-> 40 |     await page.goto('https://creator.douyin.com/creator-micro/content/upload', { waitUntil: 'domcontentloaded' });
-     |                ^
-  41 |     await safeScreenshot(page, `douyin_${timestamp}_1_initial.png`);
-  42 |     
-  43 |     // Safety check: Make sure we are not on login page
- POST /api/publish 200 in 30.8s (compile: 18ms, render: 30.7s)
-Starting Douyin upload for: test at 1772281482370
-Douyin upload failed: Error [TimeoutError]: page.goto: Timeout 30000ms exceeded.
-Call log:
-[2m  - navigating to "https://creator.douyin.com/creator-micro/content/upload", waiting until "domcontentloaded"[22m
-
-    at uploadToDouyin (src/lib/publishers/douyin.ts:40:16)
-    at async POST (src/app/api/publish/route.ts:60:24)
-  38 |     
-  39 |     // 1. Navigate to the creator portal upload page
-> 40 |     await page.goto('https://creator.douyin.com/creator-micro/content/upload', { waitUntil: 'domcontentloaded' });
-     |                ^
-  41 |     await safeScreenshot(page, `douyin_${timestamp}_1_initial.png`);
-  42 |     
-  43 |     // Safety check: Make sure we are not on login page
- POST /api/publish 200 in 30.4s (compile: 4ms, render: 30.4s)
-Starting Douyin upload for: test at 1772282003682
-Navigating to Douyin creator portal...
-Searching for file input...
-Uploading file: /Users/codeblackhole/opencode-ws/social-publisher/uploads/1772282003221-naruto-1_no_watermark.mp4
-Waiting for video upload to complete...
-Filling description and tags...
-Publishing...
-Waiting for success confirmation...
- POST /api/publish 200 in 51s (compile: 54ms, render: 51s)
- GET / 200 in 62ms (compile: 7ms, render: 55ms)
- GET /api/auth/status 200 in 13ms (compile: 3ms, render: 10ms)
- GET / 200 in 38ms (compile: 6ms, render: 32ms)
-Starting login for bilibili...
-Please login manually in the opened browser window.
-Waiting for user to log into bilibili (timeout: 3 minutes)...
-Timeout assuming manual close
-Successfully saved session for bilibili to /Users/codeblackhole/opencode-ws/social-publisher/src/lib/publishers/cookies/bilibili.json
- GET /api/auth/status 200 in 9ms (compile: 3ms, render: 6ms)
- GET / 200 in 42ms (compile: 3ms, render: 39ms)
- GET /api/auth/status 200 in 11ms (compile: 3ms, render: 8ms)
- GET / 200 in 104ms (compile: 8ms, render: 95ms)
- GET / 200 in 103ms (compile: 15ms, render: 88ms)
- GET / 200 in 114ms (compile: 1874µs, render: 112ms)
- GET / 200 in 114ms (compile: 10ms, render: 104ms)
- GET / 200 in 115ms (compile: 39ms, render: 76ms)
- GET / 200 in 115ms (compile: 51ms, render: 64ms)
- GET / 200 in 74ms (compile: 4ms, render: 70ms)
- GET / 200 in 73ms (compile: 14ms, render: 59ms)
- GET / 200 in 50ms (compile: 7ms, render: 42ms)
- GET / 200 in 50ms (compile: 1476µs, render: 49ms)
- GET / 200 in 50ms (compile: 946µs, render: 49ms)
- GET / 200 in 52ms (compile: 8ms, render: 44ms)
- GET / 200 in 52ms (compile: 976µs, render: 51ms)
- GET / 200 in 53ms (compile: 7ms, render: 46ms)
- GET / 200 in 53ms (compile: 1596µs, render: 51ms)
- GET / 200 in 59ms (compile: 8ms, render: 51ms)
- GET / 200 in 56ms (compile: 1017µs, render: 55ms)
- GET / 200 in 56ms (compile: 3ms, render: 54ms)
- GET / 200 in 54ms (compile: 1401µs, render: 53ms)
- GET / 200 in 54ms (compile: 3ms, render: 52ms)
- GET / 200 in 53ms (compile: 1198µs, render: 52ms)
- GET / 200 in 59ms (compile: 8ms, render: 52ms)
- GET / 200 in 47ms (compile: 1082µs, render: 46ms)
- GET / 200 in 38ms (compile: 3ms, render: 36ms)
- GET / 200 in 32ms (compile: 963µs, render: 31ms)
- GET / 200 in 32ms (compile: 7ms, render: 25ms)
- GET / 200 in 19ms (compile: 1235µs, render: 18ms)
- GET / 200 in 13ms (compile: 2ms, render: 11ms)
- GET /api/auth/status 200 in 29ms (compile: 25ms, render: 3ms)
- GET /api/auth/status 200 in 2ms (compile: 753µs, render: 1721µs)
-✓ Compiled in 32ms
- GET /api/tasks 200 in 51ms (compile: 49ms, render: 1685µs)
- GET /api/tasks 200 in 53ms (compile: 53ms, render: 849µs)
-  Reload env: .env.local
- GET / 200 in 190ms (compile: 169ms, render: 21ms)
- GET / 200 in 192ms (compile: 182ms, render: 10ms)
-✓ Compiled in 12ms
- GET / 200 in 86ms (compile: 6ms, render: 80ms)
- GET /api/auth/status 200 in 107ms (compile: 100ms, render: 7ms)
- GET /api/tasks 200 in 3.2s (compile: 194ms, render: 3.0s)
+✓ Ready in 474ms
+ GET / 200 in 286ms (compile: 204ms, render: 82ms)
+ GET /api/tasks 200 in 1686ms (compile: 68ms, render: 1618ms)
+ GET /api/auth/status 200 in 1689ms (compile: 90ms, render: 1599ms)
+ GET / 200 in 30ms (compile: 5ms, render: 25ms)
+ GET /api/tasks 200 in 1492ms (compile: 5ms, render: 1487ms)
+ GET /api/auth/status 200 in 1657ms (compile: 1887µs, render: 1655ms)
+ GET / 200 in 30ms (compile: 3ms, render: 27ms)
+ GET /api/tasks 200 in 1095ms (compile: 11ms, render: 1084ms)
+ GET /api/auth/status 200 in 1468ms (compile: 3ms, render: 1464ms)
 [Douyin] Starting Douyin upload for: test
 [Douyin] Navigating to Douyin creator portal...
 [Douyin] Searching for file input...
-[Douyin] Uploading file from /Users/codeblackhole/opencode-ws/social-publisher/uploads/1772291112414-naruto-1_no_watermark.mp4...
+[Douyin] Uploading file from /Users/codeblackhole/opencode-ws/social-publisher/uploads/1772332455349-naruto-1_no_watermark.mp4...
 [Douyin] Waiting for video upload to complete (this might take a few minutes)...
 [Douyin] Video upload finished.
 [Douyin] Filling description and tags...
 [Douyin] Publishing...
-[Douyin] Waiting for success confirmation (URL change or Success Toast)...
+[Douyin] Waiting for success confirmation or security challenge...
 [Douyin] Failed to detect success state.
- POST /api/publish 200 in 48s (compile: 47ms, render: 48s)
- GET /api/tasks 200 in 441ms (compile: 5ms, render: 436ms)
-✓ Compiled in 18ms
- GET /api/tasks 200 in 1648ms (compile: 48ms, render: 1600ms)
-Supabase error fetching platforms: {
-  code: 'PGRST205',
-  details: null,
-  hint: null,
-  message: "Could not find the table 'public.platforms' in the schema cache"
-}
- GET /api/auth/status 200 in 1667ms (compile: 76ms, render: 1591ms)
- GET /api/tasks 200 in 1844ms (compile: 76ms, render: 1768ms)
-Supabase error fetching platforms: {
-  code: 'PGRST205',
-  details: null,
-  hint: null,
-  message: "Could not find the table 'public.platforms' in the schema cache"
-}
- GET /api/auth/status 200 in 2.8s (compile: 80ms, render: 2.8s)
- GET / 200 in 113ms (compile: 62ms, render: 51ms)
- GET /api/tasks 200 in 1398ms (compile: 9ms, render: 1389ms)
- GET /api/auth/status 200 in 2.9s (compile: 4ms, render: 2.9s)
-Starting login for douyin...
-Please login manually in the opened browser window.
-Loading existing session for douyin...
-Waiting for user to log into douyin (timeout: 3 minutes)...
-Successfully saved session for douyin to /Users/codeblackhole/opencode-ws/social-publisher/src/lib/publishers/cookies/douyin.json
- POST /api/auth/douyin 200 in 6.6s (compile: 70ms, render: 6.6s)
- GET /api/auth/status 200 in 367ms (compile: 1063µs, render: 366ms)
-[Douyin] Starting Douyin upload for: test
-[Douyin] Navigating to Douyin creator portal...
-[Douyin] Searching for file input...
-[Douyin] Uploading file from /Users/codeblackhole/opencode-ws/social-publisher/uploads/1772291501537-naruto-1_no_watermark.mp4...
-[Douyin] Waiting for video upload to complete (this might take a few minutes)...
-[Douyin] Video upload finished.
-[Douyin] Filling description and tags...
-[Douyin] Publishing...
-[Douyin] Waiting for success confirmation (URL change or Success Toast)...
-[Douyin] Failed to detect success state.
- POST /api/publish 200 in 48s (compile: 34ms, render: 48s)
- GET /api/tasks 200 in 443ms (compile: 5ms, render: 438ms)
+ POST /api/publish 200 in 49s (compile: 220ms, render: 49s)
+ GET /api/tasks 200 in 522ms (compile: 3ms, render: 519ms)
+✓ Compiled in 225ms
+ GET / 200 in 123ms (compile: 45ms, render: 77ms)
+ GET / 200 in 119ms (compile: 61ms, render: 58ms)
+ GET / 200 in 54ms (compile: 6ms, render: 48ms)
+ GET / 200 in 48ms (compile: 1581µs, render: 47ms)
+ GET / 200 in 50ms (compile: 1556µs, render: 48ms)
+ GET / 200 in 49ms (compile: 1366µs, render: 47ms)
+ GET / 200 in 49ms (compile: 1920µs, render: 47ms)
+ GET / 200 in 54ms (compile: 1132µs, render: 53ms)
+ GET / 200 in 48ms (compile: 1459µs, render: 47ms)
+ GET / 200 in 49ms (compile: 1262µs, render: 48ms)
+ GET / 200 in 48ms (compile: 1936µs, render: 47ms)
+ GET / 200 in 56ms (compile: 1703µs, render: 54ms)
+ GET / 200 in 55ms (compile: 2ms, render: 53ms)
+ GET / 200 in 50ms (compile: 1527µs, render: 48ms)
+ GET / 200 in 51ms (compile: 1735µs, render: 49ms)
+ GET / 200 in 52ms (compile: 1585µs, render: 50ms)
+ GET / 200 in 54ms (compile: 1542µs, render: 53ms)
+ GET / 200 in 60ms (compile: 1330µs, render: 58ms)
+ GET / 200 in 54ms (compile: 1975µs, render: 52ms)
+ GET / 200 in 62ms (compile: 2ms, render: 60ms)
+ GET / 200 in 63ms (compile: 2ms, render: 61ms)
+ GET / 200 in 61ms (compile: 2ms, render: 58ms)
+ GET / 200 in 57ms (compile: 1565µs, render: 56ms)
+ GET / 200 in 57ms (compile: 1333µs, render: 56ms)
+ GET / 200 in 56ms (compile: 1338µs, render: 55ms)
+ GET / 200 in 53ms (compile: 1831µs, render: 52ms)
+ GET / 200 in 45ms (compile: 1672µs, render: 43ms)
+ GET / 200 in 37ms (compile: 1923µs, render: 35ms)
+ GET / 200 in 28ms (compile: 1346µs, render: 27ms)
+ GET / 200 in 23ms (compile: 1590µs, render: 22ms)
+ GET / 200 in 16ms (compile: 975µs, render: 15ms)
+ GET / 200 in 10ms (compile: 1246µs, render: 9ms)
+✓ Compiled in 81ms
+ GET /api/auth/status 200 in 1656ms (compile: 42ms, render: 1614ms)
+ GET /api/auth/status 200 in 1666ms (compile: 89ms, render: 1578ms)
+ GET /api/tasks 200 in 1668ms (compile: 83ms, render: 1585ms)
+ GET /api/tasks 200 in 1700ms (compile: 82ms, render: 1618ms)
