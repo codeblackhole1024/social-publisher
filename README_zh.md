@@ -69,7 +69,7 @@
 ### 1. 克隆项目
 
 ```bash
-git clone https://github.com/your-username/social-publisher.git
+git clone https://github.com/codeblackhole1024/social-publisher.git
 cd social-publisher
 ```
 
