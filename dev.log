@@ -576,3 +576,49 @@
 [Douyin] Race timed out.
  GET /api/tasks/task_1772334930777/verify 200 in 434ms (compile: 2ms, render: 432ms)
  GET /api/tasks 200 in 366ms (compile: 1160µs, render: 365ms)
+ GET / 200 in 28ms (compile: 3ms, render: 25ms)
+ GET /api/auth/status 200 in 1574ms (compile: 3ms, render: 1572ms)
+ GET /api/tasks 200 in 1579ms (compile: 15ms, render: 1564ms)
+ POST /api/publish 200 in 1448ms (compile: 45ms, render: 1404ms)
+[Douyin] Starting Douyin upload for: test
+[Douyin] Navigating to Douyin creator portal...
+ GET /api/tasks/task_1772335288418/verify 200 in 688ms (compile: 2ms, render: 686ms)
+[Douyin] Searching for file input...
+[Douyin] Uploading file from /Users/codeblackhole/opencode-ws/social-publisher/uploads/1772335289807-naruto-1_no_watermark.mp4...
+[Douyin] Waiting for video upload to complete...
+ GET /api/tasks/task_1772335288418/verify 200 in 502ms (compile: 1765µs, render: 500ms)
+ GET /api/tasks/task_1772335288418/verify 200 in 742ms (compile: 2ms, render: 740ms)
+[Douyin] Video upload finished.
+ GET /api/tasks/task_1772335288418/verify 200 in 365ms (compile: 2ms, render: 363ms)
+ GET /api/tasks/task_1772335288418/verify 200 in 366ms (compile: 3ms, render: 364ms)
+[Douyin] Filling description and tags...
+[Douyin] Publishing...
+[Douyin] Waiting for success confirmation or security challenge...
+ GET /api/tasks/task_1772335288418/verify 200 in 461ms (compile: 1841µs, render: 459ms)
+[Douyin] Verification modal popped up immediately after clicking publish.
+[Douyin] Interactive verification flow triggered.
+[Douyin] Suspending automation and requesting UI verification code. Will wait for 120 seconds...
+ GET /api/tasks/task_1772335288418/verify 200 in 382ms (compile: 1782µs, render: 380ms)
+ GET /api/tasks/task_1772335288418/verify 200 in 346ms (compile: 4ms, render: 342ms)
+ GET /api/tasks/task_1772335288418/verify 200 in 343ms (compile: 1658µs, render: 341ms)
+ GET /api/tasks/task_1772335288418/verify 200 in 425ms (compile: 2ms, render: 423ms)
+ GET /api/tasks/task_1772335288418/verify 200 in 354ms (compile: 1773µs, render: 352ms)
+ GET /api/tasks/task_1772335288418/verify 200 in 492ms (compile: 2ms, render: 490ms)
+ GET /api/tasks/task_1772335288418/verify 200 in 344ms (compile: 1809µs, render: 342ms)
+ GET /api/tasks/task_1772335288418/verify 200 in 397ms (compile: 1757µs, render: 395ms)
+ GET /api/tasks/task_1772335288418/verify 200 in 348ms (compile: 3ms, render: 345ms)
+ GET /api/tasks/task_1772335288418/verify 200 in 458ms (compile: 1776µs, render: 456ms)
+ GET /api/tasks/task_1772335288418/verify 200 in 358ms (compile: 2ms, render: 356ms)
+ GET /api/tasks/task_1772335288418/verify 200 in 360ms (compile: 1866µs, render: 358ms)
+ POST /api/tasks/task_1772335288418/verify 200 in 825ms (compile: 6ms, render: 819ms)
+ GET /api/tasks/task_1772335288418/verify 200 in 1160ms (compile: 2ms, render: 1158ms)
+[Douyin] Received verification code from UI: 123456
+[Douyin] Resuming Playwright with code...
+[Douyin] Waiting 5s for verification modal to clear...
+ GET /api/tasks/task_1772335288418/verify 200 in 411ms (compile: 1812µs, render: 409ms)
+ GET /api/tasks/task_1772335288418/verify 200 in 355ms (compile: 1761µs, render: 353ms)
+[Douyin] Waiting for publish success after submitting verification code...
+ GET /api/tasks/task_1772335288418/verify 200 in 345ms (compile: 2ms, render: 343ms)
+ GET /api/tasks/task_1772335288418/verify 200 in 450ms (compile: 2ms, render: 448ms)
+ GET /api/tasks/task_1772335288418/verify 200 in 1199ms (compile: 1556µs, render: 1197ms)
+ GET /api/tasks 200 in 409ms (compile: 1061µs, render: 408ms)

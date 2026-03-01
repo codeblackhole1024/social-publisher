@@ -21,10 +21,8 @@ async function safeScreenshot(page: Page, filename: string, screenshots: string[
   }
 }
 
-// Rewritten to be extremely aggressive and pierce iframes natively using Playwright Locators
 async function checkForVerification(page: Page, log: (msg: string) => void): Promise<boolean> {
   try {
-    // 1. Check for specific text anywhere on the page (automatically pierces Shadow DOM, but not cross-origin iframes)
     const textSelectors = [
       'text="接收短信验证码"',
       'text="获取短信验证码"',
@@ -43,7 +41,6 @@ async function checkForVerification(page: Page, log: (msg: string) => void): Pro
       }
     }
 
-    // 2. Check for specific DOM classes anywhere on the page
     const classSelectors = [
       '.secsdk-captcha-drag-icon',
       '#captcha_container',
@@ -60,7 +57,6 @@ async function checkForVerification(page: Page, log: (msg: string) => void): Pro
       }
     }
 
-    // 3. Deep check inside ALL frames (including cross-origin dynamically injected ones)
     for (const frame of page.frames()) {
       try {
         const frameContent = await frame.content();
@@ -75,9 +71,7 @@ async function checkForVerification(page: Page, log: (msg: string) => void): Pro
           log(`Found verification signature inside an iframe URL: ${frame.url().substring(0, 50)}...`);
           return true;
         }
-      } catch (e) {
-        // Ignore cross-origin frame access errors
-      }
+      } catch (e) {}
     }
 
   } catch (e) {
@@ -120,15 +114,63 @@ async function handleVerificationChallenge(taskId: string, page: Page, log: (msg
   log('Interactive verification flow triggered.');
   await safeScreenshot(page, `douyin_${Date.now()}_verif_modal.png`, screenshots, log);
   
+  // ---> NEW: Try to trigger the SMS code if a button exists BEFORE pausing <---
+  log('Checking if we need to click "获取验证码" (Send Code) button...');
+  try {
+    const sendCodeSelectors = [
+      'button:has-text("获取验证码")',
+      'div[role="button"]:has-text("获取验证码")',
+      'span:has-text("获取验证码")'
+    ];
+    let clickedSendCode = false;
+
+    // Check main page
+    for (const sel of sendCodeSelectors) {
+      const loc = page.locator(sel).first();
+      if (await loc.count() > 0 && await loc.isVisible()) {
+        await loc.click({ force: true });
+        log('Clicked "获取验证码" on main page to trigger SMS.');
+        clickedSendCode = true;
+        break;
+      }
+    }
+
+    // Check iframes
+    if (!clickedSendCode) {
+      for (const frame of page.frames()) {
+        for (const sel of sendCodeSelectors) {
+          try {
+            const loc = frame.locator(sel).first();
+            if (await loc.count() > 0 && await loc.isVisible()) {
+              await loc.click({ force: true });
+              log('Clicked "获取验证码" inside iframe to trigger SMS.');
+              clickedSendCode = true;
+              break;
+            }
+          } catch (e) {}
+        }
+        if (clickedSendCode) break;
+      }
+    }
+    
+    // Give it a second to send the SMS
+    if (clickedSendCode) {
+      await page.waitForTimeout(2000);
+      await safeScreenshot(page, `douyin_${Date.now()}_after_sms_triggered.png`, screenshots, log);
+    } else {
+      log('Could not find a clickable "获取验证码" button. It might have been sent automatically.');
+    }
+  } catch (e: any) {
+    log(`Error trying to click send code button: ${e.message}`);
+  }
+
+  // ---> Suspend and wait for user input <---
   const code = await waitForInteractiveVerificationCode(taskId, log);
   if (!code) return false;
 
   log('Resuming Playwright with code...');
   
   try {
-    // Strategy: We broadcast the fill command to both the main page and all frames
-    // because we don't know exactly which frame holds the input.
-    
     let injected = false;
     const inputSelectors = ['input[type="text"]', 'input[type="tel"]', 'input[placeholder*="验证码"]'];
     const buttonSelectors = ['button:has-text("验证")', 'button:has-text("确定")', 'div[role="button"]:has-text("验证")'];
@@ -150,7 +192,6 @@ async function handleVerificationChallenge(taskId: string, page: Page, log: (msg
             if (await frame.locator(sel).count() > 0) {
               await frame.locator(sel).first().fill(code);
               injected = true;
-              // Also click the confirm button in the same frame
               for (const btnSel of buttonSelectors) {
                 if (await frame.locator(btnSel).count() > 0) {
                   await frame.locator(btnSel).first().click();
@@ -237,7 +278,6 @@ export async function uploadToDouyin(
       return { success: false, message: '登录态已失效，页面停留在登录界面。请前往“账号管理”重新扫码登录。', logs, screenshots };
     }
 
-    // --- EARLY VERIFICATION CHECK ---
     const isEarlyVerif = await checkForVerification(page, log);
     if (isEarlyVerif) {
       log('Detected early verification modal');
@@ -327,7 +367,6 @@ export async function uploadToDouyin(
       } else if (result === 'verification_blocked') {
         log('Verification modal popped up immediately after clicking publish.');
         
-        // --- POST-PUBLISH VERIFICATION CHECK ---
         const success = await handleVerificationChallenge(taskId, page, log, screenshots);
         if (success) {
            log('Waiting for publish success after submitting verification code...');
