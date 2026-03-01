@@ -1,4 +1,4 @@
-import { type Page, type Frame } from 'playwright';
+import { type Page } from 'playwright';
 import path from 'path';
 import fs from 'fs';
 import { updateTask, getTask } from '../db';
@@ -21,34 +21,70 @@ async function safeScreenshot(page: Page, filename: string, screenshots: string[
   }
 }
 
-async function checkForVerification(page: Page, log: (msg: string) => void): Promise<Frame | Page | null> {
-  const checkFrame = async (frame: Frame | Page) => {
-    try {
-      const text = await frame.evaluate(() => document.body.innerText || '');
-      if (text.includes('获取短信验证码') || 
-          text.includes('安全验证') || 
-          text.includes('向您的手机号') || 
-          text.includes('验证码已发送')) {
+// Rewritten to be extremely aggressive and pierce iframes natively using Playwright Locators
+async function checkForVerification(page: Page, log: (msg: string) => void): Promise<boolean> {
+  try {
+    // 1. Check for specific text anywhere on the page (automatically pierces Shadow DOM, but not cross-origin iframes)
+    const textSelectors = [
+      'text="接收短信验证码"',
+      'text="获取短信验证码"',
+      'text="安全验证"',
+      'text="向您的手机号"',
+      'text="验证码已发送"',
+      'text="拖动滑块"',
+      'text="完成拼图"'
+    ];
+
+    for (const sel of textSelectors) {
+      const count = await page.locator(sel).count();
+      if (count > 0) {
+        log(`Found verification text: ${sel}`);
         return true;
       }
-      const hasModal = await frame.evaluate(() => {
-        return !!(
-          document.querySelector('.secsdk-captcha-drag-icon') || 
-          document.querySelector('#captcha_container') || 
-          document.querySelector('.captcha_verify_container') ||
-          document.querySelector('.verify-bar-close')
-        );
-      });
-      if (hasModal) return true;
-    } catch (e) {}
-    return false;
-  };
+    }
 
-  if (await checkFrame(page)) return page;
-  for (const frame of page.frames()) {
-    if (await checkFrame(frame)) return frame;
+    // 2. Check for specific DOM classes anywhere on the page
+    const classSelectors = [
+      '.secsdk-captcha-drag-icon',
+      '#captcha_container',
+      '.captcha_verify_container',
+      '.verify-bar-close',
+      'input[placeholder*="验证码"]'
+    ];
+
+    for (const sel of classSelectors) {
+      const count = await page.locator(sel).count();
+      if (count > 0) {
+        log(`Found verification element: ${sel}`);
+        return true;
+      }
+    }
+
+    // 3. Deep check inside ALL frames (including cross-origin dynamically injected ones)
+    for (const frame of page.frames()) {
+      try {
+        const frameContent = await frame.content();
+        if (
+          frameContent.includes('接收短信验证码') ||
+          frameContent.includes('获取短信验证码') ||
+          frameContent.includes('安全验证') ||
+          frameContent.includes('验证码已发送') ||
+          frameContent.includes('secsdk-captcha') ||
+          frameContent.includes('captcha_verify_container')
+        ) {
+          log(`Found verification signature inside an iframe URL: ${frame.url().substring(0, 50)}...`);
+          return true;
+        }
+      } catch (e) {
+        // Ignore cross-origin frame access errors
+      }
+    }
+
+  } catch (e) {
+    console.error("Error in checkForVerification:", e);
   }
-  return null;
+  
+  return false;
 }
 
 async function waitForInteractiveVerificationCode(taskId: string, log: (msg: string) => void, maxWaitMs = 120000): Promise<string | null> {
@@ -89,22 +125,70 @@ async function handleVerificationChallenge(taskId: string, page: Page, log: (msg
 
   log('Resuming Playwright with code...');
   
-  // Refind the frame right before filling, just in case
-  const verifFrame = await checkForVerification(page, log);
-  if (verifFrame) {
-    const inputLoc = verifFrame.locator('input[type="text"], input[type="tel"], input[placeholder*="验证码"]').first();
-    await inputLoc.fill(code);
-    await page.waitForTimeout(1000);
+  try {
+    // Strategy: We broadcast the fill command to both the main page and all frames
+    // because we don't know exactly which frame holds the input.
     
-    // Multiple variations of Douyin's confirm buttons
-    const confirmBtn = verifFrame.locator('button:has-text("确定"), button:has-text("验证"), div[role="button"]:has-text("确定")').first();
-    await confirmBtn.click();
-    
+    let injected = false;
+    const inputSelectors = ['input[type="text"]', 'input[type="tel"]', 'input[placeholder*="验证码"]'];
+    const buttonSelectors = ['button:has-text("验证")', 'button:has-text("确定")', 'div[role="button"]:has-text("验证")'];
+
+    // Try main page first
+    for (const sel of inputSelectors) {
+      if (await page.locator(sel).count() > 0) {
+        await page.locator(sel).first().fill(code);
+        injected = true;
+        break;
+      }
+    }
+
+    // Try frames if main page failed
+    if (!injected) {
+      for (const frame of page.frames()) {
+        for (const sel of inputSelectors) {
+          try {
+            if (await frame.locator(sel).count() > 0) {
+              await frame.locator(sel).first().fill(code);
+              injected = true;
+              // Also click the confirm button in the same frame
+              for (const btnSel of buttonSelectors) {
+                if (await frame.locator(btnSel).count() > 0) {
+                  await frame.locator(btnSel).first().click();
+                  log(`Clicked confirm button inside frame.`);
+                  break;
+                }
+              }
+              break;
+            }
+          } catch(e) {}
+        }
+        if (injected) break;
+      }
+    }
+
+    // If we injected on main page, click confirm on main page
+    if (injected) {
+      for (const btnSel of buttonSelectors) {
+        if (await page.locator(btnSel).count() > 0) {
+          await page.locator(btnSel).first().click();
+          log(`Clicked confirm button on main page.`);
+          break;
+        }
+      }
+    }
+
+    if (!injected) {
+      log('Could not find the input field to inject the code.');
+      return false;
+    }
+
     log('Waiting 5s for verification modal to clear...');
     await page.waitForTimeout(5000);
     return true;
+  } catch (e: any) {
+    log(`Failed to inject verification code: ${e.message}`);
+    return false;
   }
-  return false; // Could not find frame to inject
 }
 
 
@@ -154,8 +238,8 @@ export async function uploadToDouyin(
     }
 
     // --- EARLY VERIFICATION CHECK ---
-    const earlyVerifFrame = await checkForVerification(page, log);
-    if (earlyVerifFrame) {
+    const isEarlyVerif = await checkForVerification(page, log);
+    if (isEarlyVerif) {
       log('Detected early verification modal');
       const success = await handleVerificationChallenge(taskId, page, log, screenshots);
       if (!success) {
@@ -228,8 +312,8 @@ export async function uploadToDouyin(
         
         new Promise<string>((resolve) => {
           const interval = setInterval(async () => {
-            const frame = await checkForVerification(page, () => {});
-            if (frame) {
+            const hasVerif = await checkForVerification(page, () => {});
+            if (hasVerif) {
               clearInterval(interval);
               resolve('verification_blocked');
             }
