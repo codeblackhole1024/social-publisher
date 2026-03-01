@@ -11,7 +11,6 @@ import { PublishTask, SocialPlatform } from "@/lib/db"
 export default function Home() {
   const [activeTab, setActiveTab] = useState<'publish' | 'history'>('publish')
   
-  // Publish State
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoggingIn, setIsLoggingIn] = useState<string | null>(null)
   
@@ -19,12 +18,10 @@ export default function Home() {
   const [platforms, setPlatforms] = useState<Record<string, boolean>>({})
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
-  // Polling State for Interactive Verification
   const [pollingTaskId, setPollingTaskId] = useState<string | null>(null)
   const [verifPlatform, setVerifPlatform] = useState<string | null>(null)
   const [verifCodeInput, setVerifCodeInput] = useState('')
 
-  // History State
   const [tasks, setTasks] = useState<PublishTask[]>([])
   const [selectedTask, setSelectedTask] = useState<PublishTask | null>(null)
 
@@ -39,29 +36,40 @@ export default function Home() {
 
     const interval = setInterval(async () => {
       try {
+        // Guard against malformed URLs
+        if (!pollingTaskId || pollingTaskId === 'undefined' || pollingTaskId === 'null') {
+          clearInterval(interval);
+          setPollingTaskId(null);
+          return;
+        }
+
         const res = await fetch(`/api/tasks/${pollingTaskId}/verify`);
-        if (res.ok) {
-          const task: PublishTask = await res.json();
-          
-          if (task.status === 'requires_verification') {
-             // Stop UI loading and show verification modal
-             setIsSubmitting(false);
-             setVerifPlatform(task.verificationPlatform || '未知平台');
-          } else if (task.status === 'completed' || task.status === 'failed') {
-             // Done! Stop polling and navigate to results
-             clearInterval(interval);
-             setPollingTaskId(null);
-             setIsSubmitting(false);
-             setVerifPlatform(null);
-             await fetchTasks();
-             setSelectedTask(task);
-             setActiveTab('history');
-          }
+        
+        if (!res.ok) {
+          // If 404, it might be a race condition where DB hasn't synced yet, just ignore and retry next tick
+          if (res.status === 404) return;
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+
+        const task: PublishTask = await res.json();
+        
+        if (task.status === 'requires_verification') {
+            setIsSubmitting(false);
+            setVerifPlatform(task.verificationPlatform || '未知平台');
+        } else if (task.status === 'completed' || task.status === 'failed') {
+            clearInterval(interval);
+            setPollingTaskId(null);
+            setIsSubmitting(false);
+            setVerifPlatform(null);
+            await fetchTasks();
+            setSelectedTask(task);
+            setActiveTab('history');
         }
       } catch (err) {
-        console.error("Polling error", err);
+        // Silently catch fetch errors (like network drop during Next.js recompile) to prevent unhandled rejections
+        console.warn("Task polling network warning, retrying next tick...", err);
       }
-    }, 2000);
+    }, 2500); // Slightly increased polling interval to 2.5s to reduce network spam
 
     return () => clearInterval(interval);
   }, [pollingTaskId]);
@@ -69,7 +77,7 @@ export default function Home() {
   const fetchLoginStatus = async () => {
     try {
       const res = await fetch('/api/auth/status')
-      const data: SocialPlatform[] = await res.json()
+      const data = await res.json()
       if (Array.isArray(data)) {
         setDbPlatforms(data)
         setPlatforms(prev => {
@@ -87,7 +95,7 @@ export default function Home() {
     try {
       const res = await fetch('/api/tasks')
       const data = await res.json()
-      setTasks(data)
+      setTasks(Array.isArray(data) ? data : [])
     } catch (e) {}
   }
 
@@ -160,9 +168,12 @@ export default function Home() {
         body: formData,
       })
 
+      if (!response.ok) {
+        throw new Error('Server responded with an error');
+      }
+
       const data = await response.json()
       if (data.taskId) {
-        // Start polling!
         setPollingTaskId(data.taskId);
       } else {
         alert(data.error || '发布请求失败')
@@ -177,7 +188,6 @@ export default function Home() {
   const submitVerificationCode = async () => {
     if (!verifCodeInput) return;
     try {
-      // Put UI back into loading state while Playwright consumes the code
       setIsSubmitting(true); 
       setVerifPlatform(null);
       
@@ -190,7 +200,7 @@ export default function Home() {
     } catch (e) {
       alert('提交验证码失败');
       setIsSubmitting(false);
-      setVerifPlatform('douyin'); // Revert modal state
+      setVerifPlatform('douyin'); 
     }
   }
 
@@ -238,7 +248,7 @@ export default function Home() {
             <CardFooter className="flex justify-end gap-2 border-t pt-4">
               <Button variant="outline" onClick={() => {
                 setVerifPlatform(null);
-                setPollingTaskId(null); // Abort polling
+                setPollingTaskId(null); 
               }}>放弃发布</Button>
               <Button onClick={submitVerificationCode} className="bg-red-600 hover:bg-red-700">提交并继续</Button>
             </CardFooter>
@@ -284,10 +294,8 @@ export default function Home() {
       </div>
 
       <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        {/* ==================== PUBLISH TAB ==================== */}
         {activeTab === 'publish' && (
           <div className="space-y-8">
-            {/* Account Management Section */}
             <Card className="w-full">
               <CardHeader>
                 <CardTitle className="text-2xl font-bold text-gray-900">账号管理</CardTitle>
