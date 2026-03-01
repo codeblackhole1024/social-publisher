@@ -114,54 +114,83 @@ async function handleVerificationChallenge(taskId: string, page: Page, log: (msg
   log('Interactive verification flow triggered.');
   await safeScreenshot(page, `douyin_${Date.now()}_verif_modal.png`, screenshots, log);
   
-  // ---> NEW: Try to trigger the SMS code if a button exists BEFORE pausing <---
-  log('Checking if we need to click "获取验证码" (Send Code) button...');
-  try {
-    const sendCodeSelectors = [
-      'button:has-text("获取验证码")',
-      'div[role="button"]:has-text("获取验证码")',
-      'span:has-text("获取验证码")'
-    ];
-    let clickedSendCode = false;
-
-    // Check main page
-    for (const sel of sendCodeSelectors) {
-      const loc = page.locator(sel).first();
-      if (await loc.count() > 0 && await loc.isVisible()) {
-        await loc.click({ force: true });
-        log('Clicked "获取验证码" on main page to trigger SMS.');
+  // Wait for the verification modal to fully render before interacting
+  log('Waiting for verification modal to stabilize...');
+  await page.waitForTimeout(2500);
+  
+  // Try to trigger the SMS code with retries
+  log('Attempting to click "获取验证码" (Send Code) button with retries...');
+  let clickedSendCode = false;
+  
+  for (let attempt = 0; attempt < 3 && !clickedSendCode; attempt++) {
+    if (attempt > 0) {
+      log(`Retry attempt ${attempt + 1} to find send code button...`);
+      await page.waitForTimeout(2000);
+    }
+    
+    try {
+      // Strategy 1: getByText — most reliable, ignores CSS visibility
+      const byText = page.getByText('获取验证码', { exact: true });
+      if (await byText.count() > 0) {
+        await byText.first().click({ force: true, timeout: 5000 });
+        log('Clicked "获取验证码" via getByText on main page.');
         clickedSendCode = true;
         break;
       }
-    }
-
-    // Check iframes
-    if (!clickedSendCode) {
+      
+      // Strategy 2: CSS selectors on main page (skip isVisible — force click)
+      const sendCodeSelectors = [
+        'button:has-text("获取验证码")',
+        'span:has-text("获取验证码")',
+        'a:has-text("获取验证码")',
+        'div[role="button"]:has-text("获取验证码")',
+      ];
+      
+      for (const sel of sendCodeSelectors) {
+        const loc = page.locator(sel).first();
+        if (await loc.count() > 0) {
+          await loc.click({ force: true, timeout: 5000 });
+          log(`Clicked "获取验证码" on main page via: ${sel}`);
+          clickedSendCode = true;
+          break;
+        }
+      }
+      if (clickedSendCode) break;
+      
+      // Strategy 3: Search inside all iframes
       for (const frame of page.frames()) {
-        for (const sel of sendCodeSelectors) {
-          try {
+        if (clickedSendCode) break;
+        try {
+          const frameLoc = frame.getByText('获取验证码', { exact: true });
+          if (await frameLoc.count() > 0) {
+            await frameLoc.first().click({ force: true, timeout: 5000 });
+            log('Clicked "获取验证码" inside iframe via getByText.');
+            clickedSendCode = true;
+            break;
+          }
+          for (const sel of sendCodeSelectors) {
             const loc = frame.locator(sel).first();
-            if (await loc.count() > 0 && await loc.isVisible()) {
-              await loc.click({ force: true });
-              log('Clicked "获取验证码" inside iframe to trigger SMS.');
+            if (await loc.count() > 0) {
+              await loc.click({ force: true, timeout: 5000 });
+              log(`Clicked "获取验证码" inside iframe via: ${sel}`);
               clickedSendCode = true;
               break;
             }
-          } catch (e) {}
-        }
-        if (clickedSendCode) break;
+          }
+        } catch (e) {}
       }
+    } catch (e: any) {
+      log(`Send code attempt ${attempt + 1} error: ${e.message}`);
     }
-    
-    // Give it a second to send the SMS
-    if (clickedSendCode) {
-      await page.waitForTimeout(2000);
-      await safeScreenshot(page, `douyin_${Date.now()}_after_sms_triggered.png`, screenshots, log);
-    } else {
-      log('Could not find a clickable "获取验证码" button. It might have been sent automatically.');
-    }
-  } catch (e: any) {
-    log(`Error trying to click send code button: ${e.message}`);
+  }
+  
+  if (clickedSendCode) {
+    await page.waitForTimeout(3000);
+    await safeScreenshot(page, `douyin_${Date.now()}_after_sms_triggered.png`, screenshots, log);
+    log('SMS trigger button clicked successfully.');
+  } else {
+    log('WARNING: Could not find "获取验证码" button after 3 attempts. SMS may have been sent automatically.');
+    await safeScreenshot(page, `douyin_${Date.now()}_no_send_btn_found.png`, screenshots, log);
   }
 
   // ---> Suspend and wait for user input <---
@@ -172,50 +201,38 @@ async function handleVerificationChallenge(taskId: string, page: Page, log: (msg
   
   try {
     let injected = false;
-    const inputSelectors = ['input[type="text"]', 'input[type="tel"]', 'input[placeholder*="验证码"]'];
-    const buttonSelectors = ['button:has-text("验证")', 'button:has-text("确定")', 'div[role="button"]:has-text("验证")'];
+    // Most-specific selectors first
+    const inputSelectors = [
+      'input[placeholder*="验证码"]',
+      'input[placeholder*="verification"]',
+      'input[type="tel"]',
+      'input[type="text"]',
+    ];
 
-    // Try main page first
-    for (const sel of inputSelectors) {
-      if (await page.locator(sel).count() > 0) {
-        await page.locator(sel).first().fill(code);
-        injected = true;
-        break;
-      }
-    }
+    // CRITICAL: Use getByText with exact match to avoid hitting '获取验证码'
+    // The old selector button:has-text("验证") is a SUBSTRING match
+    // that matches '获取验证码' BEFORE the actual '验证' submit button.
 
-    // Try frames if main page failed
-    if (!injected) {
-      for (const frame of page.frames()) {
+    // --- Step 1: Fill the code into the input field ---
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const allContexts: Array<{ ctx: any; label: string }> = [
+      { ctx: page, label: 'main page' },
+      ...page.frames().map((f, i) => ({ ctx: f, label: `frame[${i}] ${f.url().substring(0, 40)}` }))
+    ];
+
+    for (const { ctx, label } of allContexts) {
+      if (injected) break;
+      try {
         for (const sel of inputSelectors) {
-          try {
-            if (await frame.locator(sel).count() > 0) {
-              await frame.locator(sel).first().fill(code);
-              injected = true;
-              for (const btnSel of buttonSelectors) {
-                if (await frame.locator(btnSel).count() > 0) {
-                  await frame.locator(btnSel).first().click();
-                  log(`Clicked confirm button inside frame.`);
-                  break;
-                }
-              }
-              break;
-            }
-          } catch(e) {}
+          const loc = ctx.locator(sel);
+          if (await loc.count() > 0) {
+            await loc.first().fill(code);
+            log(`Injected code into input via '${sel}' on ${label}.`);
+            injected = true;
+            break;
+          }
         }
-        if (injected) break;
-      }
-    }
-
-    // If we injected on main page, click confirm on main page
-    if (injected) {
-      for (const btnSel of buttonSelectors) {
-        if (await page.locator(btnSel).count() > 0) {
-          await page.locator(btnSel).first().click();
-          log(`Clicked confirm button on main page.`);
-          break;
-        }
-      }
+      } catch (e) {}
     }
 
     if (!injected) {
@@ -223,8 +240,74 @@ async function handleVerificationChallenge(taskId: string, page: Page, log: (msg
       return false;
     }
 
-    log('Waiting 5s for verification modal to clear...');
-    await page.waitForTimeout(5000);
+    // --- Step 2: Click the EXACT '验证' submit button (NOT '获取验证码') ---
+    await page.waitForTimeout(500);
+    let clickedSubmit = false;
+
+    for (const { ctx, label } of allContexts) {
+      if (clickedSubmit) break;
+      try {
+        // Strategy A: getByText exact match — '验证' only, not '获取验证码'
+        const exactBtn = ctx.getByText('验证', { exact: true });
+        if (await exactBtn.count() > 0) {
+          await exactBtn.first().click({ force: true, timeout: 5000 });
+          log(`Clicked exact '验证' submit button on ${label}.`);
+          clickedSubmit = true;
+          break;
+        }
+
+        // Strategy B: getByRole button with exact name
+        const roleBtn = ctx.getByRole('button', { name: '验证', exact: true });
+        if (await roleBtn.count() > 0) {
+          await roleBtn.first().click({ force: true, timeout: 5000 });
+          log(`Clicked '验证' button via getByRole on ${label}.`);
+          clickedSubmit = true;
+          break;
+        }
+
+        // Strategy C: Fallback — use CSS :text-is for exact text (Playwright pseudo-selector)
+        const exactCss = ctx.locator('button:text-is("验证"), div[role="button"]:text-is("验证")').first();
+        if (await exactCss.count() > 0) {
+          await exactCss.click({ force: true, timeout: 5000 });
+          log(`Clicked '验证' via :text-is on ${label}.`);
+          clickedSubmit = true;
+          break;
+        }
+      } catch (e) {}
+    }
+
+    if (!clickedSubmit) {
+      log('WARNING: Could not find exact 验证 submit button. Trying fallback "确定"...');
+      try {
+        const fallback = page.getByText('确定', { exact: true });
+        if (await fallback.count() > 0) {
+          await fallback.first().click({ force: true });
+          log('Clicked fallback 确定 button.');
+          clickedSubmit = true;
+        }
+      } catch (e) {}
+    }
+
+    if (!clickedSubmit) {
+      log('CRITICAL: Could not click any submit button for verification code.');
+      await safeScreenshot(page, `douyin_${Date.now()}_no_submit_btn.png`, screenshots, log);
+      return false;
+    }
+
+    // --- Step 3: Wait for verification modal to actually close ---
+    log('Waiting for verification modal to close...');
+    try {
+      await page.waitForFunction(() => {
+        const text = document.body.innerText;
+        return !text.includes('接收短信验证码') && !text.includes('请输入验证码');
+      }, { timeout: 15000 });
+      log('Verification modal closed successfully.');
+    } catch (e) {
+      log('WARNING: Verification modal may still be open after 15s.');
+      await safeScreenshot(page, `douyin_${Date.now()}_modal_stuck.png`, screenshots, log);
+    }
+
+    await page.waitForTimeout(2000);
     return true;
   } catch (e: any) {
     log(`Failed to inject verification code: ${e.message}`);
@@ -259,7 +342,7 @@ export async function uploadToDouyin(
     
     await page.route('**/*', route => {
       const type = route.request().resourceType();
-      if (['image', 'media', 'font', 'stylesheet'].includes(type) && !route.request().url().includes('upload')) {
+      if (['image', 'media', 'font'].includes(type) && !route.request().url().includes('upload')) {
         route.abort();
       } else {
         route.continue();
@@ -273,6 +356,26 @@ export async function uploadToDouyin(
     });
     
     await page.waitForSelector('body', { timeout: 30000 });
+
+    // Dismiss any notification popups (共创中心, etc.) that block interaction
+    log('Checking for notification popups to dismiss...');
+    try {
+      const dismissSelectors = [
+        'button:has-text("我知道了")',
+        'button:has-text("知道了")',
+        'button:has-text("关闭")',
+        'div[role="button"]:has-text("我知道了")',
+        '.semi-modal-close',
+      ];
+      for (const sel of dismissSelectors) {
+        const popup = page.locator(sel).first();
+        if (await popup.count() > 0) {
+          await popup.click({ force: true, timeout: 3000 }).catch(() => {});
+          log(`Dismissed popup via: ${sel}`);
+          await page.waitForTimeout(500);
+        }
+      }
+    } catch (e) {}
     
     if (page.url().includes('login') || (await page.locator('.login-container').count()) > 0) {
       return { success: false, message: '登录态已失效，页面停留在登录界面。请前往“账号管理”重新扫码登录。', logs, screenshots };
@@ -308,6 +411,26 @@ export async function uploadToDouyin(
     } catch (e) {
       log('Timeout waiting for upload text indicators.');
     }
+
+    // Wait for video detection/processing to complete (检测中 → done)
+    log('Waiting for video detection to finish...');
+    try {
+      await page.waitForFunction(() => {
+        const text = document.body.innerText;
+        return !text.includes('检测中') || text.includes('检测完成') || text.includes('100%');
+      }, { timeout: 120000 });
+      log('Video detection completed.');
+    } catch (e) {
+      log('Detection did not finish in 120s, proceeding anyway.');
+    }
+    // Dismiss popups that appeared during upload
+    try {
+      const uploadPopup = page.locator('button:has-text("我知道了")').first();
+      if (await uploadPopup.count() > 0) {
+        await uploadPopup.click({ force: true, timeout: 3000 }).catch(() => {});
+        log('Dismissed popup during upload wait.');
+      }
+    } catch (e) {}
     
     await page.waitForTimeout(3000); 
 
@@ -322,6 +445,16 @@ export async function uploadToDouyin(
     await page.keyboard.press('Backspace').catch(() => {});
     await page.keyboard.insertText(fullText);
     await page.waitForTimeout(1000);
+
+    // Dismiss any popups before clicking publish
+    try {
+      const prePublishPopup = page.locator('button:has-text("我知道了"), button:has-text("知道了"), .semi-modal-close').first();
+      if (await prePublishPopup.count() > 0) {
+        await prePublishPopup.click({ force: true, timeout: 3000 }).catch(() => {});
+        log('Dismissed popup before publish.');
+        await page.waitForTimeout(500);
+      }
+    } catch (e) {}
 
     log('Publishing...');
     const publishButton = page.locator('button', { hasText: /^发布$/ }).first();
@@ -369,20 +502,117 @@ export async function uploadToDouyin(
         
         const success = await handleVerificationChallenge(taskId, page, log, screenshots);
         if (success) {
-           log('Waiting for publish success after submitting verification code...');
-           await page.waitForTimeout(5000);
+           log('Verification passed. Waiting for modal to close...');
+           await page.waitForTimeout(3000);
+           await safeScreenshot(page, `douyin_${timestamp}_after_verif.png`, screenshots, log);
            
+           // Check if we already landed on success page
            if (page.url().includes('manage') || (await page.evaluate(() => document.body.innerText)).includes('发布成功')) {
               isSuccess = true;
-              log('Successfully published after SMS verification!');
+              log('Successfully published after SMS verification (auto-submitted)!');
            } else {
-              return { success: false, message: '验证码已提交，但发布依然失败，可能验证码错误或过期。', logs, screenshots };
+              // Douyin often returns to the upload form after verification — need to re-click publish
+              log('Verification passed but not yet published. Re-clicking publish button...');
+              try {
+                const rePublishBtn = page.locator('button', { hasText: /^发布$/ }).first();
+                await rePublishBtn.waitFor({ state: 'visible', timeout: 10000 });
+                
+                const isStillDisabled = await rePublishBtn.getAttribute('disabled');
+                if (isStillDisabled !== null) {
+                  log('Publish button still disabled after verification, waiting...');
+                  await page.waitForTimeout(5000);
+                }
+                
+                await rePublishBtn.scrollIntoViewIfNeeded().catch(() => {});
+                await safeScreenshot(page, `douyin_${timestamp}_re_publish.png`, screenshots, log);
+                await rePublishBtn.click({ force: true });
+                log('Re-clicked publish button after verification.');
+                
+                // Wait for final success OR another verification challenge
+                try {
+                  const reResult = await Promise.race([
+                    page.waitForFunction(() => {
+                      const text = document.body.innerText;
+                      return text.includes('发布成功') || text.includes('投稿成功') || text.includes('进入审核') || text.includes('去查看');
+                    }, { timeout: 30000 }).then(() => 'success_text' as const),
+                    
+                    page.waitForURL('**/manage/**', { timeout: 30000 }).then(() => 'success_url' as const),
+                    
+                    // Also check for ANOTHER verification modal
+                    new Promise<'verification_again'>((resolve) => {
+                      const iv = setInterval(async () => {
+                        const hasVerif = await checkForVerification(page, () => {});
+                        if (hasVerif) {
+                          clearInterval(iv);
+                          resolve('verification_again');
+                        }
+                      }, 1000);
+                      setTimeout(() => clearInterval(iv), 30000);
+                    })
+                  ]);
+                  
+                  if (reResult === 'success_text' || reResult === 'success_url') {
+                    isSuccess = true;
+                    log('Successfully published after re-clicking publish!');
+                  } else if (reResult === 'verification_again') {
+                    log('Another verification challenge after re-publish. Handling round 2...');
+                    const success2 = await handleVerificationChallenge(taskId, page, log, screenshots);
+                    if (success2) {
+                      log('Round 2 verification passed. Checking for success...');
+                      await page.waitForTimeout(3000);
+                      
+                      // After second verification, check if published or need to click publish again
+                      if (page.url().includes('manage') || (await page.evaluate(() => document.body.innerText)).includes('发布成功')) {
+                        isSuccess = true;
+                        log('Published successfully after round 2 verification!');
+                      } else {
+                        // Try one final re-publish
+                        log('Round 2 done. Attempting final publish click...');
+                        try {
+                          const finalBtn = page.locator('button', { hasText: /^发布$/ }).first();
+                          if (await finalBtn.count() > 0) {
+                            await finalBtn.click({ force: true });
+                            await page.waitForTimeout(10000);
+                            if (page.url().includes('manage') || (await page.evaluate(() => document.body.innerText)).includes('发布成功')) {
+                              isSuccess = true;
+                              log('Published successfully after final re-click!');
+                            }
+                          }
+                        } catch (e) {}
+                        
+                        if (!isSuccess) {
+                          await safeScreenshot(page, `douyin_${timestamp}_final_fail.png`, screenshots, log);
+                          return { success: false, message: '两轮验证均通过，但发布仍未成功。请手动确认。', logs, screenshots };
+                        }
+                      }
+                    } else {
+                      return { success: false, message: '第二轮验证码等待超时或提交失败。', logs, screenshots };
+                    }
+                  }
+                } catch (e2) {
+                  // Timeout fallback — check URL
+                  if (page.url().includes('manage')) {
+                    isSuccess = true;
+                    log('Post-verification publish succeeded (URL check).');
+                  } else {
+                    await safeScreenshot(page, `douyin_${timestamp}_re_publish_failed.png`, screenshots, log);
+                    return { success: false, message: '验证通过后重新点击发布，但未检测到成功标志。请手动确认。', logs, screenshots };
+                  }
+                }
+              } catch (reClickErr: any) {
+                log(`Re-publish error: ${reClickErr.message}`);
+                if (page.url().includes('manage') || (await page.evaluate(() => document.body.innerText)).includes('发布成功')) {
+                  isSuccess = true;
+                  log('Publish succeeded despite re-click error (page already navigated).');
+                } else {
+                  return { success: false, message: `验证通过但重新发布失败: ${reClickErr.message}`, logs, screenshots };
+                }
+              }
            }
         } else {
           return { success: false, message: '验证码等待超时或提交失败。发布终止。', logs, screenshots };
         }
       }
-
     } catch (e) {
       log('Race timed out.');
       if (page.url().includes('manage')) isSuccess = true;

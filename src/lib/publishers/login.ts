@@ -23,9 +23,12 @@ export async function loginToPlatform(platform: Platform) {
   console.log(`Starting login for ${platform}...`);
   console.log(`Please login manually in the opened browser window.`);
 
+  // Use system Chrome for YouTube (Google blocks Playwright's Chromium as 'unsafe browser')
+  const useSystemChrome = platform === 'youtube';
   const browser = await chromium.launch({
     headless: false,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--start-maximized'],
+    ...(useSystemChrome ? { channel: 'chrome' } : {}),
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--start-maximized', '--disable-blink-features=AutomationControlled'],
   });
 
   let context: BrowserContext;
@@ -51,8 +54,8 @@ export async function loginToPlatform(platform: Platform) {
     } else if (platform === 'xiaohongshu') {
       await page.waitForURL('**/creator/home**', { timeout: 180000 }).catch(() => console.log('Timeout assuming manual close'));
     } else if (platform === 'youtube') {
-      // YouTube Studio dashboard URL
-      await page.waitForURL('**/channel/**', { timeout: 180000 }).catch(() => console.log('Timeout assuming manual close'));
+      // YouTube Studio — wait for channel dashboard or studio home
+      await page.waitForURL('**/studio.youtube.com/**', { timeout: 180000 }).catch(() => console.log('Timeout assuming manual close'));
     }
 
     await context.storageState({ path: cookiePath });

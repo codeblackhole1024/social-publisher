@@ -152,10 +152,13 @@ export async function updateTask(id: string, updates: Partial<PublishTask>) {
       .single();
 
     if (error) {
+      console.error(`[DB] updateTask(${id}) FAILED:`, error.message, JSON.stringify(updates));
       return null;
     }
+    console.log(`[DB] updateTask(${id}) OK -> status=${(data as any)?.status}`);
     return data as PublishTask;
-  } catch (err) {
+  } catch (err: any) {
+    console.error(`[DB] updateTask(${id}) EXCEPTION:`, err.message);
     return null;
   }
 }

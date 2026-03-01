@@ -4,6 +4,8 @@ import path from 'path';
 import { chromium, type Browser } from 'playwright';
 import { uploadToDouyin } from '@/lib/publishers/douyin';
 import { uploadToYouTube } from '@/lib/publishers/youtube';
+import { uploadToBilibili } from '@/lib/publishers/bilibili';
+import { uploadToXiaohongshu } from '@/lib/publishers/xiaohongshu';
 import { saveTask, type PublishTask, type PublishResult } from '@/lib/db';
 
 const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
@@ -91,11 +93,21 @@ export async function POST(req: Request) {
         }
         
         if (platformsObj.youtube) {
+          let ytBrowser: Browser | null = null;
           try {
             const cookiePath = path.join(COOKIES_DIR, 'youtube.json');
             if (!fs.existsSync(cookiePath)) throw new Error('未找到YouTube登录凭证');
             
-            const context = await browser.newContext({ storageState: cookiePath });
+            // YouTube requires system Chrome — Google blocks Playwright's Chromium
+            ytBrowser = await chromium.launch({
+                headless: true,
+                channel: 'chrome',
+                args: ['--disable-blink-features=AutomationControlled', '--disable-web-security']
+            });
+            const context = await ytBrowser.newContext({
+                storageState: cookiePath,
+                userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+            });
             const page = await context.newPage();
             
             const result = await uploadToYouTube(page, filePath, title, description, tagsArray);
@@ -103,15 +115,47 @@ export async function POST(req: Request) {
             await context.close();
           } catch (err: any) {
             results.push({ platform: 'youtube', success: false, message: `自动化错误: ${err.message}`, logs: [err.message], screenshots: [] });
+          } finally {
+            if (ytBrowser) await ytBrowser.close();
           }
         }
 
         if (platformsObj.bilibili) {
-          results.push({ platform: 'bilibili', success: false, message: 'Playwright逻辑待实现', logs: [], screenshots: [] });
+          try {
+            const cookiePath = path.join(COOKIES_DIR, 'bilibili.json');
+            if (!fs.existsSync(cookiePath)) throw new Error('未找到B站登录凭证');
+            
+            const context = await browser.newContext({
+                storageState: cookiePath,
+                userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+            });
+            const page = await context.newPage();
+            
+            const result = await uploadToBilibili(taskId, page, filePath, title, description, tagsArray);
+            results.push({ platform: 'bilibili', ...result });
+            await context.close();
+          } catch (err: any) {
+            results.push({ platform: 'bilibili', success: false, message: `自动化错误: ${err.message}`, logs: [err.message], screenshots: [] });
+          }
         }
         
         if (platformsObj.xiaohongshu) {
-          results.push({ platform: 'xiaohongshu', success: false, message: 'Playwright逻辑待实现', logs: [], screenshots: [] });
+          try {
+            const cookiePath = path.join(COOKIES_DIR, 'xiaohongshu.json');
+            if (!fs.existsSync(cookiePath)) throw new Error('未找到小红书登录凭证');
+            
+            const context = await browser.newContext({
+                storageState: cookiePath,
+                userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+            });
+            const page = await context.newPage();
+            
+            const result = await uploadToXiaohongshu(taskId, page, filePath, title, description, tagsArray);
+            results.push({ platform: 'xiaohongshu', ...result });
+            await context.close();
+          } catch (err: any) {
+            results.push({ platform: 'xiaohongshu', success: false, message: `自动化错误: ${err.message}`, logs: [err.message], screenshots: [] });
+          }
         }
 
       } finally {
