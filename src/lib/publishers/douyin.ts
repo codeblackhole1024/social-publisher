@@ -21,7 +21,6 @@ async function safeScreenshot(page: Page, filename: string, screenshots: string[
   }
 }
 
-// Check for verification modals across the main page and ALL iframes
 async function checkForVerification(page: Page, log: (msg: string) => void): Promise<Frame | Page | null> {
   const checkFrame = async (frame: Frame | Page) => {
     try {
@@ -52,11 +51,9 @@ async function checkForVerification(page: Page, log: (msg: string) => void): Pro
   return null;
 }
 
-// Pause and poll DB for verification code from UI
 async function waitForInteractiveVerificationCode(taskId: string, log: (msg: string) => void, maxWaitMs = 120000): Promise<string | null> {
   log(`Suspending automation and requesting UI verification code. Will wait for ${maxWaitMs / 1000} seconds...`);
   
-  // Set task to requires_verification
   await updateTask(taskId, { 
     status: 'requires_verification',
     requiresVerification: true,
@@ -69,19 +66,47 @@ async function waitForInteractiveVerificationCode(taskId: string, log: (msg: str
     const task = await getTask(taskId);
     if (task && task.verificationCode) {
       log(`Received verification code from UI: ${task.verificationCode}`);
-      // Clear the code and status
       await updateTask(taskId, { 
         status: 'processing',
         requiresVerification: false 
       });
       return task.verificationCode;
     }
-    await new Promise(resolve => setTimeout(resolve, 2000)); // Poll every 2 seconds
+    await new Promise(resolve => setTimeout(resolve, 2000));
   }
   
   log(`Timeout waiting for user verification code.`);
   return null;
 }
+
+// Reusable handler to solve the challenge whenever it appears
+async function handleVerificationChallenge(taskId: string, page: Page, log: (msg: string) => void, screenshots: string[]): Promise<boolean> {
+  log('Interactive verification flow triggered.');
+  await safeScreenshot(page, `douyin_${Date.now()}_verif_modal.png`, screenshots, log);
+  
+  const code = await waitForInteractiveVerificationCode(taskId, log);
+  if (!code) return false;
+
+  log('Resuming Playwright with code...');
+  
+  // Refind the frame right before filling, just in case
+  const verifFrame = await checkForVerification(page, log);
+  if (verifFrame) {
+    const inputLoc = verifFrame.locator('input[type="text"], input[type="tel"], input[placeholder*="验证码"]').first();
+    await inputLoc.fill(code);
+    await page.waitForTimeout(1000);
+    
+    // Multiple variations of Douyin's confirm buttons
+    const confirmBtn = verifFrame.locator('button:has-text("确定"), button:has-text("验证"), div[role="button"]:has-text("确定")').first();
+    await confirmBtn.click();
+    
+    log('Waiting 5s for verification modal to clear...');
+    await page.waitForTimeout(5000);
+    return true;
+  }
+  return false; // Could not find frame to inject
+}
+
 
 export async function uploadToDouyin(
   taskId: string,
@@ -128,11 +153,14 @@ export async function uploadToDouyin(
       return { success: false, message: '登录态已失效，页面停留在登录界面。请前往“账号管理”重新扫码登录。', logs, screenshots };
     }
 
+    // --- EARLY VERIFICATION CHECK ---
     const earlyVerifFrame = await checkForVerification(page, log);
     if (earlyVerifFrame) {
       log('Detected early verification modal');
-      await safeScreenshot(page, `douyin_${timestamp}_early_verif.png`, screenshots, log);
-      return { success: false, message: '页面初始化时触发安全验证，需手工解除环境异常。', logs, screenshots };
+      const success = await handleVerificationChallenge(taskId, page, log, screenshots);
+      if (!success) {
+        return { success: false, message: '页面初始化时触发安全验证，且验证失败或超时。', logs, screenshots };
+      }
     }
 
     await page.waitForTimeout(4000); 
@@ -188,7 +216,6 @@ export async function uploadToDouyin(
     log('Waiting for success confirmation or security challenge...');
     
     let isSuccess = false;
-    let redirectUrl = false;
     
     try {
       const result = await Promise.race([
@@ -214,50 +241,27 @@ export async function uploadToDouyin(
       if (result === 'success_text' || result === 'success_url') {
         isSuccess = true;
       } else if (result === 'verification_blocked') {
-        log('Verification modal popped up during publish.');
-        await safeScreenshot(page, `douyin_${timestamp}_verif_modal.png`, screenshots, log);
+        log('Verification modal popped up immediately after clicking publish.');
         
-        // INTERACTIVE VERIFICATION FLOW
-        const code = await waitForInteractiveVerificationCode(taskId, log);
-        if (code) {
-          log('Resuming Playwright with code...');
-          
-          // Find the frame and input the code
-          const verifFrame = await checkForVerification(page, log);
-          if (verifFrame) {
-            // Find input field - often type="text" or specific placeholder
-            const inputLoc = verifFrame.locator('input[type="text"], input[type="tel"], input[placeholder*="验证码"]').first();
-            await inputLoc.fill(code);
-            await page.waitForTimeout(1000);
-            
-            // Click confirm - often has text "确定" or "验证"
-            const confirmBtn = verifFrame.locator('button:has-text("确定"), button:has-text("验证"), div[role="button"]:has-text("确定")').first();
-            await confirmBtn.click();
-            
-            // Wait for success after injecting code
-            log('Waiting for publish success after verification...');
-            await page.waitForTimeout(5000);
-            
-            if (page.url().includes('manage') || (await page.evaluate(() => document.body.innerText)).includes('发布成功')) {
-               isSuccess = true;
-               log('Successfully published after SMS verification!');
-            } else {
-               return { success: false, message: '验证码已提交，但发布依然失败，可能验证码错误或过期。', logs, screenshots };
-            }
-          }
+        // --- POST-PUBLISH VERIFICATION CHECK ---
+        const success = await handleVerificationChallenge(taskId, page, log, screenshots);
+        if (success) {
+           log('Waiting for publish success after submitting verification code...');
+           await page.waitForTimeout(5000);
+           
+           if (page.url().includes('manage') || (await page.evaluate(() => document.body.innerText)).includes('发布成功')) {
+              isSuccess = true;
+              log('Successfully published after SMS verification!');
+           } else {
+              return { success: false, message: '验证码已提交，但发布依然失败，可能验证码错误或过期。', logs, screenshots };
+           }
         } else {
-          return { 
-            success: false, 
-            message: '验证码等待超时。发布失败。', 
-            logs, 
-            screenshots 
-          };
+          return { success: false, message: '验证码等待超时或提交失败。发布终止。', logs, screenshots };
         }
       }
 
     } catch (e) {
       log('Race timed out.');
-      // Final fallback check
       if (page.url().includes('manage')) isSuccess = true;
     }
 

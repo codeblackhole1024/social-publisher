@@ -498,3 +498,48 @@
  GET /api/tasks/task_1772333095704/verify 200 in 398ms (compile: 3ms, render: 395ms)
  GET /api/tasks/task_1772333095704/verify 200 in 417ms (compile: 3ms, render: 415ms)
  GET /api/tasks/task_1772333095704/verify 200 in 417ms (compile: 2ms, render: 415ms)
+ GET /api/tasks/task_1772333095704/verify 200 in 398ms (compile: 1797µs, render: 396ms)
+ GET /api/tasks/task_1772333095704/verify 200 in 626ms (compile: 8ms, render: 618ms)
+ GET /api/tasks/task_1772333095704/verify 200 in 388ms (compile: 1755µs, render: 386ms)
+ GET /api/tasks/task_1772333095704/verify 200 in 396ms (compile: 4ms, render: 392ms)
+ GET /api/tasks/task_1772333095704/verify 200 in 397ms (compile: 2ms, render: 395ms)
+ GET /api/tasks/task_1772333095704/verify 200 in 630ms (compile: 1651µs, render: 628ms)
+ GET /api/tasks/task_1772333095704/verify 200 in 422ms (compile: 4ms, render: 418ms)
+ GET /api/tasks/task_1772333095704/verify 200 in 397ms (compile: 2ms, render: 395ms)
+ GET /api/tasks/task_1772333095704/verify 200 in 376ms (compile: 1596µs, render: 375ms)
+ GET /api/tasks/task_1772333095704/verify 200 in 388ms (compile: 1671µs, render: 387ms)
+ GET /api/tasks/task_1772333095704/verify 200 in 487ms (compile: 4ms, render: 483ms)
+ GET /api/tasks/task_1772333095704/verify 200 in 386ms (compile: 1801µs, render: 384ms)
+ GET / 200 in 99ms (compile: 41ms, render: 58ms)
+ GET /api/auth/status 200 in 454ms (compile: 5ms, render: 449ms)
+ GET /api/tasks 200 in 1281ms (compile: 11ms, render: 1270ms)
+ POST /api/publish 200 in 1176ms (compile: 1579µs, render: 1174ms)
+[Douyin] Starting Douyin upload for: test
+[Douyin] Navigating to Douyin creator portal...
+ GET /api/tasks/task_1772333803812/verify 200 in 506ms (compile: 2ms, render: 504ms)
+ GET /api/tasks/task_1772333803812/verify 200 in 630ms (compile: 1918µs, render: 628ms)
+[Douyin] Searching for file input...
+[Douyin] Uploading file from /Users/codeblackhole/opencode-ws/social-publisher/uploads/1772333804976-naruto-1_no_watermark.mp4...
+[Douyin] Waiting for video upload to complete...
+ GET /api/tasks/task_1772333803812/verify 200 in 608ms (compile: 2ms, render: 606ms)
+[Douyin] Video upload finished.
+ GET /api/tasks/task_1772333803812/verify 200 in 922ms (compile: 1869µs, render: 920ms)
+ GET /api/tasks/task_1772333803812/verify 200 in 492ms (compile: 2ms, render: 490ms)
+[Douyin] Filling description and tags...
+[Douyin] Publishing...
+[Douyin] Waiting for success confirmation or security challenge...
+ GET /api/tasks/task_1772333803812/verify 200 in 619ms (compile: 3ms, render: 616ms)
+ GET /api/tasks/task_1772333803812/verify 200 in 432ms (compile: 3ms, render: 429ms)
+ GET /api/tasks/task_1772333803812/verify 200 in 361ms (compile: 1675µs, render: 359ms)
+ GET /api/tasks/task_1772333803812/verify 200 in 360ms (compile: 2ms, render: 358ms)
+ GET /api/tasks/task_1772333803812/verify 200 in 471ms (compile: 1892µs, render: 469ms)
+ GET /api/tasks/task_1772333803812/verify 200 in 376ms (compile: 5ms, render: 371ms)
+ GET /api/tasks/task_1772333803812/verify 200 in 366ms (compile: 4ms, render: 362ms)
+ GET /api/tasks/task_1772333803812/verify 200 in 461ms (compile: 1955µs, render: 459ms)
+ GET /api/tasks/task_1772333803812/verify 200 in 375ms (compile: 5ms, render: 370ms)
+ GET /api/tasks/task_1772333803812/verify 200 in 470ms (compile: 2ms, render: 468ms)
+ GET /api/tasks/task_1772333803812/verify 200 in 371ms (compile: 6ms, render: 365ms)
+ GET /api/tasks/task_1772333803812/verify 200 in 426ms (compile: 2ms, render: 424ms)
+[Douyin] Race timed out.
+ GET /api/tasks/task_1772333803812/verify 200 in 357ms (compile: 1639µs, render: 356ms)
+ GET /api/tasks 200 in 508ms (compile: 1225µs, render: 507ms)
