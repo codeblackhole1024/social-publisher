@@ -109,10 +109,10 @@ CREATE TABLE IF NOT EXISTS platforms (
 
 -- Seed platform data
 INSERT INTO platforms (id, name, is_connected) VALUES
-  ('douyin', '抖音', false),
-  ('bilibili', 'B站', false),
+  ('douyin', 'Douyin', false),
+  ('bilibili', 'Bilibili', false),
   ('youtube', 'YouTube', false),
-  ('xiaohongshu', '小红书', false)
+  ('xiaohongshu', 'Xiaohongshu', false)
 ON CONFLICT (id) DO NOTHING;
 
 -- Tasks table
